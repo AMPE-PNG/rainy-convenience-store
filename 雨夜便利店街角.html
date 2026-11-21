@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<!-- saved from url=(0090)file:///C:/Users/fhy20/Documents/Codex/2026-11-21/ui/outputs/rainy-convenience-corner.html -->
+<html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>雨夜便利店街角</title>
+  <style>
+    :root {
+      --ink: #0a1020;
+      --cyan: #78efff;
+      --warm: #ffe0a0;
+      --night: #070c17;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(52, 79, 112, .42) 0, rgba(19, 30, 52, .36) 28%, transparent 58%),
+        linear-gradient(155deg, #172237 0%, #0a1020 49%, #050812 100%);
+      color: white;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 48% 58%, transparent 35%, rgba(0, 3, 12, .48) 76%, rgba(0, 2, 8, .82) 100%),
+        linear-gradient(125deg, rgba(119, 220, 255, .04), transparent 38%, rgba(255, 147, 95, .035));
+      z-index: 20;
+    }
+
+    #viewport {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      perspective: 1550px;
+      perspective-origin: 50% 45%;
+      cursor: grab;
+    }
+
+    #viewport.dragging { cursor: grabbing; }
+
+    #atmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .night-glow {
+      position: absolute;
+      width: 52vmin;
+      height: 38vmin;
+      border-radius: 50%;
+      filter: blur(46px);
+      opacity: .24;
+      mix-blend-mode: screen;
+    }
+
+    .night-glow.one {
+      left: 38%;
+      top: 28%;
+      background: #36cfe7;
+      transform: rotate(-16deg);
+    }
+
+    .night-glow.two {
+      left: 61%;
+      top: 50%;
+      width: 30vmin;
+      height: 26vmin;
+      background: #ff9c72;
+      opacity: .16;
+    }
+
+    #rig {
+      width: 860px;
+      height: 860px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform-origin: 50% 50%;
+      will-change: transform;
+      z-index: 2;
+    }
+
+    #scene {
+      position: absolute;
+      width: 0;
+      height: 0;
+      left: 50%;
+      top: 50%;
+      transform-style: preserve-3d;
+    }
+
+    .node {
+      position: absolute;
+      width: 0;
+      height: 0;
+      transform-style: preserve-3d;
+    }
+
+    .face {
+      position: absolute;
+      transform-style: preserve-3d;
+      backface-visibility: visible;
+      box-shadow: inset 0 0 0 1.4px rgba(7, 12, 26, .34);
+      overflow: hidden;
+      border-radius: inherit;
+    }
+
+    .face.soft-edge { box-shadow: inset 0 0 0 1px rgba(7, 12, 26, .2); }
+    .face.no-outline { box-shadow: none; }
+
+    .ground {
+      background-size: cover;
+      box-shadow: none;
+    }
+
+    .base-top {
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px),
+        linear-gradient(145deg, #1b2942, #111c31);
+      background-size: 42px 42px, 42px 42px, 100% 100%;
+    }
+
+    .sidewalk {
+      background:
+        linear-gradient(90deg, transparent calc(100% - 1px), rgba(7, 13, 26, .42) 0) 0 0 / 46px 100%,
+        linear-gradient(transparent calc(100% - 1px), rgba(7, 13, 26, .38) 0) 0 0 / 100% 46px,
+        linear-gradient(135deg, #a5aeb6, #6e7986);
+    }
+
+    .asphalt {
+      background:
+        radial-gradient(ellipse at 28% 38%, rgba(105, 156, 183, .19), transparent 42%),
+        radial-gradient(ellipse at 74% 67%, rgba(31, 112, 138, .16), transparent 38%),
+        repeating-linear-gradient(118deg, rgba(255, 255, 255, .015) 0 1px, transparent 1px 9px),
+        linear-gradient(145deg, #263243, #111a29 62%, #172435);
+    }
+
+    .road-reflection {
+      opacity: .52;
+      filter: blur(4px);
+      mix-blend-mode: screen;
+      border-radius: 50%;
+    }
+
+    .puddle {
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 50% 46%, rgba(128, 218, 236, .24), rgba(35, 101, 135, .13) 48%, rgba(10, 25, 44, .1) 72%, transparent 73%);
+      box-shadow: inset 0 0 11px rgba(133, 228, 255, .18);
+      filter: blur(.35px);
+      opacity: .9;
+    }
+
+    .puddle::after {
+      content: "";
+      position: absolute;
+      inset: 21% 12% 18%;
+      border: 1px solid rgba(158, 233, 255, .25);
+      border-radius: 50%;
+      transform: scale(.55, .13);
+    }
+
+    .crosswalk a {
+      position: absolute;
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #d6e0dd, #f7f5e9);
+      opacity: .63;
+      border-left: 1px solid rgba(10, 19, 31, .4);
+      border-right: 1px solid rgba(10, 19, 31, .4);
+      box-shadow: 8px 0 15px rgba(123, 227, 255, .09);
+    }
+
+    .gutter {
+      background:
+        repeating-linear-gradient(90deg, rgba(216, 225, 226, .2) 0 2px, transparent 2px 16px),
+        linear-gradient(#172332, #070d17);
+      border: 1px solid rgba(169, 190, 196, .18);
+    }
+
+    .curb {
+      background: linear-gradient(#d5d9d5, #79858e 60%, #4b5661);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .52);
+    }
+
+    .glass {
+      background:
+        linear-gradient(112deg, rgba(255, 255, 255, .32) 0 8%, transparent 9% 28%, rgba(255, 255, 255, .12) 29% 36%, transparent 37%),
+        linear-gradient(180deg, rgba(239, 255, 226, .94), rgba(191, 233, 210, .73) 67%, rgba(79, 176, 177, .62));
+      border-color: rgba(199, 239, 241, .58) !important;
+      box-shadow:
+        inset 0 0 0 2px rgba(151, 225, 230, .52),
+        inset 0 0 28px rgba(233, 255, 214, .72),
+        0 0 18px rgba(116, 235, 228, .18);
+    }
+
+    .window-interior {
+      position: absolute;
+      inset: 11px 10px 13px;
+      background:
+        linear-gradient(180deg, rgba(238, 252, 218, .74), rgba(144, 206, 174, .22)),
+        repeating-linear-gradient(180deg, transparent 0 34px, rgba(17, 64, 74, .28) 35px 38px);
+      border-radius: 2px;
+    }
+
+    .shelf {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      height: 18%;
+      border-bottom: 3px solid rgba(26, 72, 78, .64);
+    }
+
+    .shelf:nth-child(1) { top: 14%; }
+    .shelf:nth-child(2) { top: 36%; }
+    .shelf:nth-child(3) { top: 58%; }
+    .shelf:nth-child(4) { top: 80%; }
+
+    .shelf i {
+      position: absolute;
+      bottom: 4px;
+      width: 7px;
+      height: 17px;
+      border-radius: 2px 2px 0 0;
+      opacity: .8;
+      box-shadow: 20px 0 0 var(--c2, #ffbb72), 40px 0 0 var(--c3, #68c8c9), 60px 0 0 var(--c1, #ed7d72), 80px 0 0 var(--c3, #68c8c9), 100px 0 0 var(--c2, #ffbb72), 120px 0 0 var(--c1, #ed7d72);
+    }
+
+    .door-light {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .16), transparent 20%),
+        linear-gradient(180deg, rgba(252, 255, 218, .86), rgba(179, 222, 194, .55));
+    }
+
+    .store-sign {
+      background:
+        linear-gradient(180deg, #173448, #0a1927),
+        repeating-linear-gradient(90deg, transparent 0 19px, rgba(255, 255, 255, .03) 20px);
+      border: 2px solid rgba(105, 231, 247, .54) !important;
+      box-shadow:
+        inset 0 0 18px rgba(56, 199, 221, .22),
+        0 0 22px rgba(71, 220, 246, .22);
+    }
+
+    .sign-copy {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      color: #f3ffff;
+      font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", "YuGothic", "Microsoft YaHei", sans-serif;
+      font-weight: 900;
+      letter-spacing: .045em;
+      text-shadow:
+        0 0 5px rgba(130, 235, 255, .95),
+        0 0 12px rgba(83, 222, 248, .7);
+    }
+
+    .sign-copy .jp {
+      font-size: 25px;
+      transform: translateY(-1px);
+    }
+
+    .sign-copy .en {
+      font-family: "Arial Narrow", Arial, sans-serif;
+      font-size: 12px;
+      letter-spacing: .13em;
+      color: #9df5ff;
+      transform: translateY(1px);
+    }
+
+    .sign-pin {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 15px;
+      height: 15px;
+      border: 2px solid #86efff;
+      border-radius: 50%;
+      transform: translateY(-50%);
+      box-shadow: 0 0 7px #68e9ff;
+    }
+
+    .sign-pin::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      border-radius: 50%;
+      background: #ff9b6d;
+    }
+
+    .side-neon {
+      background: linear-gradient(180deg, rgba(9, 25, 37, .97), rgba(8, 18, 29, .97));
+      border: 1px solid rgba(105, 231, 247, .52) !important;
+      box-shadow:
+        0 0 17px rgba(74, 222, 244, .24),
+        inset 0 0 12px rgba(92, 218, 238, .15);
+    }
+
+    .side-neon span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #dffeff;
+      font: 900 11px "Arial Narrow", Arial, sans-serif;
+      letter-spacing: .16em;
+      text-shadow: 0 0 7px rgba(110, 231, 249, .9);
+    }
+
+    .coffee-sign {
+      background: linear-gradient(180deg, #233940, #11222c);
+      border: 2px solid rgba(255, 195, 124, .68) !important;
+      box-shadow:
+        0 0 15px rgba(255, 177, 94, .32),
+        inset 0 0 10px rgba(255, 192, 113, .2);
+    }
+
+    .coffee-sign span {
+      position: absolute;
+      inset: 5px;
+      display: grid;
+      place-items: center;
+      color: #ffe4af;
+      font: 900 15px "Yu Gothic", "Microsoft YaHei", sans-serif;
+      writing-mode: vertical-rl;
+      letter-spacing: .12em;
+      text-shadow:
+        0 0 6px rgba(255, 188, 102, .95),
+        0 0 13px rgba(255, 146, 78, .55);
+    }
+
+    .awning {
+      background:
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, .06) 0 46px, rgba(3, 17, 32, .15) 46px 92px),
+        linear-gradient(180deg, #2795a2, #116676);
+      border: 1px solid rgba(122, 237, 248, .28);
+    }
+
+    .awning-valence {
+      background:
+        repeating-linear-gradient(90deg, #ecf0e5 0 15%, #2d8d99 15% 30%);
+      box-shadow: 0 4px 9px rgba(1, 8, 17, .28);
+    }
+
+    .mullion {
+      background: linear-gradient(90deg, #25323b, #68747b 50%, #1c2831);
+      border: 1px solid rgba(211, 236, 236, .26);
+    }
+
+    .door-frame {
+      background: linear-gradient(90deg, #26343e, #89949a 48%, #26343e);
+    }
+
+    .handle {
+      background: linear-gradient(#eaffff, #65afb8);
+      box-shadow: 0 0 5px rgba(177, 250, 255, .45);
+    }
+
+    .doormat {
+      background:
+        repeating-linear-gradient(0deg, rgba(239, 238, 216, .32) 0 2px, transparent 2px 8px),
+        linear-gradient(135deg, #394c4c, #162528);
+      border: 1px solid rgba(219, 238, 230, .33);
+    }
+
+    .poster {
+      background:
+        linear-gradient(180deg, rgba(19, 78, 93, .18), transparent 37%),
+        repeating-linear-gradient(180deg, transparent 0 7px, rgba(13, 45, 59, .28) 8px 9px),
+        #e4e7d6;
+      border: 3px solid #152536 !important;
+      box-shadow:
+        0 5px 9px rgba(1, 6, 13, .3),
+        inset 0 0 0 3px rgba(255, 255, 255, .48);
+    }
+
+    .poster .poster-title {
+      position: absolute;
+      left: 8%;
+      top: 11%;
+      color: #1a5460;
+      font-family: "Yu Gothic", "Microsoft YaHei", sans-serif;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+
+    .poster .poster-mark {
+      position: absolute;
+      right: 9%;
+      top: 12%;
+      width: 26%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #ef8e70;
+      border: 3px solid rgba(255, 244, 210, .75);
+    }
+
+    .poster .poster-lines {
+      position: absolute;
+      left: 8%;
+      right: 9%;
+      bottom: 12%;
+      height: 35%;
+      border-top: 2px solid #6b8f8a;
+      border-bottom: 2px solid #6b8f8a;
+      opacity: .45;
+    }
+
+    .notice-board {
+      background: #17232b;
+      border: 4px solid #56636a !important;
+      box-shadow:
+        inset 0 0 0 2px #121b21,
+        0 5px 12px rgba(2, 6, 13, .4);
+    }
+
+    .vending-body {
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, .16), transparent 20%),
+        linear-gradient(180deg, #d75750, #9e363e 58%, #552d39);
+      border: 1px solid rgba(255, 196, 176, .35);
+    }
+
+    .vending-panel {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .96), rgba(218, 244, 232, .95)),
+        #ecf4df;
+      border: 2px solid #17323e !important;
+      box-shadow:
+        inset 0 0 28px rgba(127, 222, 231, .45),
+        0 0 17px rgba(159, 235, 255, .24);
+    }
+
+    .drink-grid {
+      position: absolute;
+      inset: 9% 8% 29%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 4px;
+      background: #203b4e;
+      border-radius: 3px;
+    }
+
+    .drink-grid i {
+      display: block;
+      position: relative;
+      border-radius: 3px 3px 1px 1px;
+      background: var(--drink);
+      box-shadow: inset 2px 0 0 rgba(255, 255, 255, .33);
+    }
+
+    .drink-grid i::after {
+      content: "";
+      position: absolute;
+      left: 25%;
+      right: 25%;
+      top: 8%;
+      height: 16%;
+      border-radius: 10px;
+      background: #dceceb;
+    }
+
+    .vending-copy {
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      bottom: 10%;
+      height: 17%;
+      display: grid;
+      place-items: center;
+      color: #eafcfa;
+      background: #1b4c5c;
+      font-family: "Arial Narrow", Arial, sans-serif;
+      font-weight: 900;
+      font-size: 10px;
+      letter-spacing: .16em;
+      border-radius: 2px;
+    }
+
+    .lamp-light {
+      background:
+        radial-gradient(circle at 50% 25%, #fffde2 0 18%, #ffe59d 33%, rgba(255, 205, 111, .55) 60%, rgba(255, 185, 79, .16) 100%);
+      border: 1px solid rgba(255, 242, 195, .8) !important;
+      box-shadow:
+        0 0 18px rgba(255, 222, 137, .92),
+        0 0 46px rgba(255, 182, 78, .36);
+      border-radius: 8px !important;
+    }
+
+    .lamp-halo {
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 224, 151, .25), transparent 68%);
+      filter: blur(7px);
+      mix-blend-mode: screen;
+    }
+
+    .pole-concrete {
+      background:
+        linear-gradient(90deg, #6c7a7d, #a9afa9 42%, #69767b);
+      box-shadow: inset 2px 0 0 rgba(255, 255, 255, .17);
+    }
+
+    .pole-green {
+      background: linear-gradient(90deg, #2c5250, #68817c 43%, #223f41);
+    }
+
+    .wire {
+      background: #080e18;
+      border-radius: 3px;
+      box-shadow: 0 1px 0 rgba(123, 208, 223, .08);
+      transform-origin: 50% 50%;
+    }
+
+    .traffic-panel {
+      background:
+        linear-gradient(180deg, #326d80, #255469);
+      border: 3px solid #e8f2e9 !important;
+      box-shadow:
+        0 4px 8px rgba(2, 8, 15, .38),
+        inset 0 0 0 2px rgba(6, 36, 48, .32);
+    }
+
+    .traffic-panel .arrow {
+      position: absolute;
+      left: 50%;
+      top: 54%;
+      width: 35%;
+      height: 10%;
+      background: #f4f3e5;
+      transform: translate(-48%, -50%);
+      clip-path: polygon(0 35%, 62% 35%, 62% 0, 100% 50%, 62% 100%, 62% 65%, 0 65%);
+    }
+
+    .no-entry {
+      background: #e95c5a;
+      border-radius: 50%;
+      border: 4px solid #f4eee2 !important;
+      box-shadow: 0 4px 8px rgba(3, 7, 13, .4);
+    }
+
+    .no-entry::after {
+      content: "";
+      position: absolute;
+      left: 14%;
+      right: 14%;
+      top: 44%;
+      height: 12%;
+      background: #fff4e5;
+      border-radius: 2px;
+    }
+
+    .bike-wheel {
+      border: 5px solid #bcc7c5;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow:
+        inset 0 0 0 2px rgba(24, 36, 45, .62),
+        0 0 4px rgba(190, 241, 242, .22);
+    }
+
+    .bike-frame {
+      background: linear-gradient(90deg, #3b9095, #84ced0);
+      border: 1px solid rgba(7, 23, 31, .7);
+      border-radius: 5px;
+    }
+
+    .umbrella {
+      border: 2px solid var(--u-color);
+      border-top: 0;
+      border-radius: 0 0 40% 40%;
+      background: linear-gradient(180deg, transparent 4%, color-mix(in srgb, var(--u-color), transparent 80%));
+    }
+
+    .umbrella::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -24%;
+      width: 1px;
+      height: 140%;
+      background: #b8c7c8;
+      transform: rotate(-8deg);
+    }
+
+    .trash-lid {
+      background: linear-gradient(180deg, #6d7780, #3d4954);
+      border-radius: 6px;
+    }
+
+    .rail {
+      background: linear-gradient(#e3e7df, #919da1 55%, #52616b);
+      border: 1px solid rgba(12, 20, 29, .38);
+      box-shadow: 0 2px 4px rgba(0, 5, 12, .26);
+    }
+
+    .tree-crown {
+      border-radius: 44% 56% 50% 50%;
+      background:
+        radial-gradient(circle at 36% 26%, rgba(159, 215, 150, .46), transparent 34%),
+        linear-gradient(145deg, #3c6d5e, #1b453e 68%, #102f31);
+      box-shadow:
+        inset 5px 5px 0 rgba(152, 208, 145, .11),
+        0 8px 13px rgba(1, 7, 13, .24);
+      border: 1px solid rgba(133, 194, 153, .2) !important;
+    }
+
+    .tree-crown.deep {
+      background:
+        radial-gradient(circle at 31% 24%, rgba(109, 180, 129, .3), transparent 35%),
+        linear-gradient(145deg, #28534d, #173b39 64%, #0d292e);
+    }
+
+    .alley-sign {
+      background: linear-gradient(180deg, #19313e, #0a1723);
+      border: 1px solid rgba(112, 221, 234, .38) !important;
+      box-shadow: 0 4px 9px rgba(0, 5, 11, .4), inset 0 0 10px rgba(94, 220, 232, .18);
+    }
+
+    .alley-sign span {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #dffeff;
+      font: 900 12px "Yu Gothic", "Microsoft YaHei", sans-serif;
+      letter-spacing: .18em;
+      text-shadow: 0 0 6px rgba(103, 228, 245, .7);
+    }
+
+    .roof-unit {
+      background:
+        repeating-linear-gradient(90deg, rgba(19, 30, 37, .2) 0 2px, transparent 2px 8px),
+        linear-gradient(145deg, #89999b, #596b72);
+      border: 1px solid rgba(203, 216, 212, .32) !important;
+    }
+
+    .ripple {
+      border-radius: 50%;
+      border: 1px solid rgba(142, 230, 255, .5);
+      background: transparent;
+      box-shadow: none;
+      animation: ripple 2.8s ease-out infinite;
+    }
+
+    @keyframes ripple {
+      0% { transform: translate(-50%, -50%) rotateX(90deg) scale(.22); opacity: .75; }
+      82%, 100% { transform: translate(-50%, -50%) rotateX(90deg) scale(1.45); opacity: 0; }
+    }
+
+    .steam {
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(181, 216, 222, .2), transparent 69%);
+      filter: blur(6px);
+      animation: drift 7s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift {
+      from { opacity: .22; transform: translate(-50%, -50%) rotateX(90deg) scale(.8) translate(6px, -2px); }
+      to { opacity: .06; transform: translate(-50%, -50%) rotateX(90deg) scale(1.28) translate(-8px, 5px); }
+    }
+
+    #rain {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 3;
+      opacity: .62;
+    }
+
+    .raindrop {
+      position: absolute;
+      width: 1px;
+      height: var(--len);
+      top: -15vh;
+      left: var(--x);
+      background: linear-gradient(180deg, transparent, rgba(204, 235, 252, .66), rgba(116, 214, 241, .18));
+      transform: rotate(8deg);
+      animation: rain-fall var(--speed) linear infinite;
+      animation-delay: var(--delay);
+      filter: drop-shadow(0 0 2px rgba(113, 215, 252, .18));
+    }
+
+    @keyframes rain-fall {
+      0% { transform: translate3d(-15px, -12vh, 0) rotate(8deg); opacity: 0; }
+      8% { opacity: .85; }
+      88% { opacity: .48; }
+      100% { transform: translate3d(35px, 120vh, 0) rotate(8deg); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .raindrop, .ripple, .steam { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="viewport" aria-label="可拖拽旋转和缩放的雨夜便利店三维微缩模型" class="">
+    <div id="rig" style="transform: rotateX(-47deg) rotateY(48.9138deg) scale(0.91);">
+      <div id="scene"><div class="node" style="transform: translate3d(0px, 5.5px, 0px);"><div class="face  box-top" style="width: 886px; height: 886px; left: -443px; top: -443px; transform: translateY(-12.5px) rotateX(90deg); background: rgb(52, 68, 94); border-radius: 12px;"></div><div class="face  box-bottom" style="width: 886px; height: 886px; left: -443px; top: -443px; transform: translateY(12.5px) rotateX(-90deg); background: rgb(10, 24, 47); border-radius: 12px;"></div><div class="face  box-front" style="width: 886px; height: 25px; left: -443px; top: -12.5px; transform: translateZ(443px); background: rgb(38, 52, 75); border-radius: 12px;"></div><div class="face  box-back" style="width: 886px; height: 25px; left: -443px; top: -12.5px; transform: translateZ(-443px) rotateY(180deg); background: rgb(25, 39, 62); border-radius: 12px;"></div><div class="face  box-right" style="width: 886px; height: 25px; left: -443px; top: -12.5px; transform: translateX(443px) rotateY(90deg); background: rgb(24, 36, 58); border-radius: 12px;"></div><div class="face  box-left" style="width: 886px; height: 25px; left: -443px; top: -12.5px; transform: translateX(-443px) rotateY(-90deg); background: rgb(28, 40, 62); border-radius: 12px;"></div></div><div class="node" style="transform: translate3d(0px, -0.2px, 0px);"><div class="face ground base-top" style="width: 852px; height: 852px; left: -426px; top: -426px; transform: rotateX(90deg); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(0px, 24px, 0px);"><div class="face  box-top" style="width: 903px; height: 903px; left: -451.5px; top: -451.5px; transform: translateY(-3.5px) rotateX(90deg); background: rgb(29, 41, 64); border-radius: 8px;"></div><div class="face  box-bottom" style="width: 903px; height: 903px; left: -451.5px; top: -451.5px; transform: translateY(3.5px) rotateX(-90deg); background: rgb(0, 4, 23); border-radius: 8px;"></div><div class="face  box-front" style="width: 903px; height: 7px; left: -451.5px; top: -3.5px; transform: translateZ(451.5px); background: rgb(23, 32, 51); border-radius: 8px;"></div><div class="face  box-back" style="width: 903px; height: 7px; left: -451.5px; top: -3.5px; transform: translateZ(-451.5px) rotateY(180deg); background: rgb(10, 19, 38); border-radius: 8px;"></div><div class="face  box-right" style="width: 903px; height: 7px; left: -451.5px; top: -3.5px; transform: translateX(451.5px) rotateY(90deg); background: rgb(14, 22, 40); border-radius: 8px;"></div><div class="face  box-left" style="width: 903px; height: 7px; left: -451.5px; top: -3.5px; transform: translateX(-451.5px) rotateY(-90deg); background: rgb(18, 26, 44); border-radius: 8px;"></div></div><div class="node" style="transform: translate3d(0px, -8.5px, 316px);"><div class="face ground asphalt" style="width: 845px; height: 218px; left: -422.5px; top: -109px; transform: rotateX(90deg); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(350px, -8.7px, -68px);"><div class="face ground asphalt" style="width: 145px; height: 600px; left: -72.5px; top: -300px; transform: rotateX(90deg); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(-252px, -8.9px, -258px);"><div class="face ground asphalt" style="width: 338px; height: 152px; left: -169px; top: -76px; transform: rotateX(90deg); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-15px, -12.5px, 172px);"><div class="face ground sidewalk" style="width: 745px; height: 100px; left: -372.5px; top: -50px; transform: rotateX(90deg); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(229px, -12.7px, -54px);"><div class="face ground sidewalk" style="width: 105px; height: 545px; left: -52.5px; top: -272.5px; transform: rotateX(90deg); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(0px, -18.5px, 223px);"><div class="face curb box-top" style="width: 750px; height: 9px; left: -375px; top: -4.5px; transform: translateY(-6px) rotateX(90deg); background: rgb(174, 185, 188); border-radius: 4px;"></div><div class="face curb box-bottom" style="width: 750px; height: 9px; left: -375px; top: -4.5px; transform: translateY(6px) rotateX(-90deg); background: rgb(128, 139, 142); border-radius: 4px;"></div><div class="face curb box-front" style="width: 750px; height: 12px; left: -375px; top: -6px; transform: translateZ(4.5px); background: rgb(156, 167, 170); border-radius: 4px;"></div><div class="face curb box-back" style="width: 750px; height: 12px; left: -375px; top: -6px; transform: translateZ(-4.5px) rotateY(180deg); background: rgb(143, 154, 157); border-radius: 4px;"></div><div class="face curb box-right" style="width: 9px; height: 12px; left: -4.5px; top: -6px; transform: translateX(375px) rotateY(90deg); background: rgb(139, 150, 153); border-radius: 4px;"></div><div class="face curb box-left" style="width: 9px; height: 12px; left: -4.5px; top: -6px; transform: translateX(-375px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(283px, -18.5px, -42px);"><div class="face curb box-top" style="width: 10px; height: 525px; left: -5px; top: -262.5px; transform: translateY(-6px) rotateX(90deg); background: rgb(162, 173, 178); border-radius: 4px;"></div><div class="face curb box-bottom" style="width: 10px; height: 525px; left: -5px; top: -262.5px; transform: translateY(6px) rotateX(-90deg); background: rgb(116, 127, 132); border-radius: 4px;"></div><div class="face curb box-front" style="width: 10px; height: 12px; left: -5px; top: -6px; transform: translateZ(262.5px); background: rgb(144, 155, 160); border-radius: 4px;"></div><div class="face curb box-back" style="width: 10px; height: 12px; left: -5px; top: -6px; transform: translateZ(-262.5px) rotateY(180deg); background: rgb(131, 142, 147); border-radius: 4px;"></div><div class="face curb box-right" style="width: 525px; height: 12px; left: -262.5px; top: -6px; transform: translateX(5px) rotateY(90deg); background: rgb(127, 138, 143); border-radius: 4px;"></div><div class="face curb box-left" style="width: 525px; height: 12px; left: -262.5px; top: -6px; transform: translateX(-5px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(247px, -17.5px, 20px);"><div class="face curb box-top" style="width: 62px; height: 10px; left: -31px; top: -5px; transform: translateY(-5px) rotateX(90deg); background: rgb(174, 185, 188); border-radius: 4px;"></div><div class="face curb box-bottom" style="width: 62px; height: 10px; left: -31px; top: -5px; transform: translateY(5px) rotateX(-90deg); background: rgb(128, 139, 142); border-radius: 4px;"></div><div class="face curb box-front" style="width: 62px; height: 10px; left: -31px; top: -5px; transform: translateZ(5px); background: rgb(156, 167, 170); border-radius: 4px;"></div><div class="face curb box-back" style="width: 62px; height: 10px; left: -31px; top: -5px; transform: translateZ(-5px) rotateY(180deg); background: rgb(143, 154, 157); border-radius: 4px;"></div><div class="face curb box-right" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateX(31px) rotateY(90deg); background: rgb(139, 150, 153); border-radius: 4px;"></div><div class="face curb box-left" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateX(-31px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-75px, -13.7px, 231px);"><div class="face ground gutter" style="width: 410px; height: 12px; left: -205px; top: -6px; transform: rotateX(90deg); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(291px, -13.9px, -115px);"><div class="face ground gutter" style="width: 12px; height: 245px; left: -6px; top: -122.5px; transform: rotateX(90deg); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(238px, -14px, 20px);"><div class="face ground gutter" style="width: 62px; height: 10px; left: -31px; top: -5px; transform: rotateX(90deg); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(-62px, -14.5px, 345px);"><div class="face ground crosswalk" style="width: 490px; height: 108px; left: -245px; top: -54px; transform: rotateX(90deg); border-radius: 2px;"><a style="left: 5.4%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 14.9%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 24.4%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 33.9%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 43.4%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 52.9%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 62.4%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 71.9%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 81.4%; width: 3.8%; transform: skewX(-3deg);"></a><a style="left: 90.9%; width: 3.8%; transform: skewX(-3deg);"></a></div></div><div class="node" style="transform: translate3d(375px, -14.6px, -168px);"><div class="face ground" style="width: 5px; height: 165px; left: -2.5px; top: -82.5px; transform: rotateX(90deg); background: rgba(230, 235, 222, 0.55); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(375px, -14.6px, -260px);"><div class="face ground" style="width: 126px; height: 5px; left: -63px; top: -2.5px; transform: rotateX(90deg); background: rgba(230, 235, 222, 0.55); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(434px, -14.6px, -72px);"><div class="face ground" style="width: 5px; height: 120px; left: -2.5px; top: -60px; transform: rotateX(90deg); background: rgba(230, 235, 222, 0.55); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(361px, -14.6px, 76px);"><div class="face ground" style="width: 110px; height: 7px; left: -55px; top: -3.5px; transform: rotateX(90deg); background: rgba(230, 235, 222, 0.46); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(-275px, -14.6px, 273px);"><div class="face ground" style="width: 135px; height: 7px; left: -67.5px; top: -3.5px; transform: rotateX(90deg); background: rgba(230, 235, 222, 0.4); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(5px, -16.1px, 155px);"><div class="face ground road-reflection" style="width: 348px; height: 37px; left: -174px; top: -18.5px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(98, 235, 244, 0.5), rgba(246, 244, 193, 0.39), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(212px, -16.2px, 182px);"><div class="face ground road-reflection" style="width: 94px; height: 23px; left: -47px; top: -11.5px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(255, 143, 104, 0.5), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(-205px, -16.3px, 275px);"><div class="face ground road-reflection" style="width: 56px; height: 18px; left: -28px; top: -9px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(255, 220, 139, 0.55), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(268px, -16.5px, 325px);"><div class="face ground road-reflection" style="width: 48px; height: 18px; left: -24px; top: -9px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(112, 225, 255, 0.48), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(-55px, -16.6px, 267px);"><div class="face ground road-reflection" style="width: 172px; height: 48px; left: -86px; top: -24px; transform: rotateX(90deg); background: linear-gradient(transparent 5%, rgba(72, 231, 244, 0.38), rgba(244, 219, 142, 0.25), transparent 95%); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(214px, -16.7px, 272px);"><div class="face ground road-reflection" style="width: 64px; height: 76px; left: -32px; top: -38px; transform: rotateX(90deg); background: linear-gradient(transparent, rgba(255, 118, 100, 0.44), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(354px, -16.8px, 75px);"><div class="face ground road-reflection" style="width: 36px; height: 115px; left: -18px; top: -57.5px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(210, 173, 99, 0.34), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(89px, -15.8px, 193px);"><div class="face ground puddle" style="width: 136px; height: 43px; left: -68px; top: -21.5px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(242px, -15.9px, 255px);"><div class="face ground puddle" style="width: 98px; height: 50px; left: -49px; top: -25px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(-164px, -15.9px, 290px);"><div class="face ground puddle" style="width: 182px; height: 64px; left: -91px; top: -32px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(376px, -15.9px, 16px);"><div class="face ground puddle" style="width: 80px; height: 142px; left: -40px; top: -71px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(-35px, -145px, -58px);"><div class="face  box-top" style="width: 400px; height: 290px; left: -200px; top: -145px; transform: translateY(-135px) rotateX(90deg); background: rgb(76, 89, 99); border-radius: 2px;"></div><div class="face  box-bottom" style="width: 400px; height: 290px; left: -200px; top: -145px; transform: translateY(135px) rotateX(-90deg); background: rgb(187, 184, 171); border-radius: 2px;"></div><div class="face  box-front" style="width: 400px; height: 270px; left: -200px; top: -135px; transform: translateZ(145px); background: rgb(231, 226, 212); border-radius: 2px;"></div><div class="face  box-back" style="width: 400px; height: 270px; left: -200px; top: -135px; transform: translateZ(-145px) rotateY(180deg); background: rgb(202, 199, 186); border-radius: 2px;"></div><div class="face  box-right" style="width: 290px; height: 270px; left: -145px; top: -135px; transform: translateX(200px) rotateY(90deg); background: rgb(159, 159, 160); border-radius: 2px;"></div><div class="face  box-left" style="width: 290px; height: 270px; left: -145px; top: -135px; transform: translateX(-200px) rotateY(-90deg); background: rgb(163, 163, 164); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-35px, -286px, -58px);"><div class="face  box-top" style="width: 420px; height: 310px; left: -210px; top: -155px; transform: translateY(-8px) rotateX(90deg); background: rgb(64, 84, 97); border-radius: 2px;"></div><div class="face  box-bottom" style="width: 420px; height: 310px; left: -210px; top: -155px; transform: translateY(8px) rotateX(-90deg); background: rgb(60, 71, 81); border-radius: 2px;"></div><div class="face  box-front" style="width: 420px; height: 16px; left: -210px; top: -8px; transform: translateZ(155px); background: rgb(88, 99, 109); border-radius: 2px;"></div><div class="face  box-back" style="width: 420px; height: 16px; left: -210px; top: -8px; transform: translateZ(-155px) rotateY(180deg); background: rgb(75, 86, 96); border-radius: 2px;"></div><div class="face  box-right" style="width: 310px; height: 16px; left: -155px; top: -8px; transform: translateX(210px) rotateY(90deg); background: rgb(53, 69, 79); border-radius: 2px;"></div><div class="face  box-left" style="width: 310px; height: 16px; left: -155px; top: -8px; transform: translateX(-210px) rotateY(-90deg); background: rgb(57, 73, 83); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-35px, -306.5px, -170px);"><div class="face  box-top" style="width: 402px; height: 16px; left: -201px; top: -8px; transform: translateY(-12.5px) rotateX(90deg); background: rgb(164, 170, 171); border-radius: 1px;"></div><div class="face  box-bottom" style="width: 402px; height: 16px; left: -201px; top: -8px; transform: translateY(12.5px) rotateX(-90deg); background: rgb(97, 105, 109); border-radius: 1px;"></div><div class="face  box-front" style="width: 402px; height: 25px; left: -201px; top: -12.5px; transform: translateZ(8px); background: rgb(125, 133, 137); border-radius: 1px;"></div><div class="face  box-back" style="width: 402px; height: 25px; left: -201px; top: -12.5px; transform: translateZ(-8px) rotateY(180deg); background: rgb(112, 120, 124); border-radius: 1px;"></div><div class="face  box-right" style="width: 16px; height: 25px; left: -8px; top: -12.5px; transform: translateX(201px) rotateY(90deg); background: rgb(84, 94, 102); border-radius: 1px;"></div><div class="face  box-left" style="width: 16px; height: 25px; left: -8px; top: -12.5px; transform: translateX(-201px) rotateY(-90deg); background: rgb(88, 98, 106); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(-163px, -309px, -132px);"><div class="face  box-top" style="width: 72px; height: 53px; left: -36px; top: -26.5px; transform: translateY(-17px) rotateX(90deg); background: rgb(143, 156, 157); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 72px; height: 53px; left: -36px; top: -26.5px; transform: translateY(17px) rotateX(-90deg); background: rgb(79, 96, 100); border-radius: 3px;"></div><div class="face  box-front" style="width: 72px; height: 34px; left: -36px; top: -17px; transform: translateZ(26.5px); background: rgb(117, 133, 138); border-radius: 3px;"></div><div class="face  box-back" style="width: 72px; height: 34px; left: -36px; top: -17px; transform: translateZ(-26.5px) rotateY(180deg); background: rgb(94, 111, 115); border-radius: 3px;"></div><div class="face  box-right" style="width: 53px; height: 34px; left: -26.5px; top: -17px; transform: translateX(36px) rotateY(90deg); background: rgb(74, 91, 98); border-radius: 3px;"></div><div class="face  box-left" style="width: 53px; height: 34px; left: -26.5px; top: -17px; transform: translateX(-36px) rotateY(-90deg); background: rgb(78, 95, 102); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(-163px, -310px, -104px);"><div class="face roof-unit" style="width: 57px; height: 20px; left: -28.5px; top: -10px; transform: rotateY(0deg); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-55px, -305.5px, -143px);"><div class="face  box-top" style="width: 28px; height: 28px; left: -14px; top: -14px; transform: translateY(-13.5px) rotateX(90deg); background: rgb(132, 147, 149); border-radius: 10px;"></div><div class="face  box-bottom" style="width: 28px; height: 28px; left: -14px; top: -14px; transform: translateY(13.5px) rotateX(-90deg); background: rgb(69, 88, 94); border-radius: 10px;"></div><div class="face  box-front" style="width: 28px; height: 27px; left: -14px; top: -13.5px; transform: translateZ(14px); background: rgb(97, 116, 122); border-radius: 10px;"></div><div class="face  box-back" style="width: 28px; height: 27px; left: -14px; top: -13.5px; transform: translateZ(-14px) rotateY(180deg); background: rgb(84, 103, 109); border-radius: 10px;"></div><div class="face  box-right" style="width: 28px; height: 27px; left: -14px; top: -13.5px; transform: translateX(14px) rotateY(90deg); background: rgb(64, 83, 91); border-radius: 10px;"></div><div class="face  box-left" style="width: 28px; height: 27px; left: -14px; top: -13.5px; transform: translateX(-14px) rotateY(-90deg); background: rgb(68, 87, 95); border-radius: 10px;"></div></div><div class="node" style="transform: translate3d(-55px, -305px, -128px);"><div class="face" style="width: 20px; height: 12px; left: -10px; top: -6px; transform: rotateY(0deg); background: repeating-linear-gradient(90deg, rgb(49, 69, 77) 0px, rgb(49, 69, 77) 2px, rgb(126, 141, 142) 2px, rgb(126, 141, 142) 4px); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(72px, -318px, -156px);"><div class="face  box-top" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateY(-26px) rotateX(90deg); background: rgb(160, 171, 170); border-radius: 6px;"></div><div class="face  box-bottom" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateY(26px) rotateX(-90deg); background: rgb(110, 123, 124); border-radius: 6px;"></div><div class="face  box-front" style="width: 10px; height: 52px; left: -5px; top: -26px; transform: translateZ(5px); background: rgb(138, 151, 152); border-radius: 6px;"></div><div class="face  box-back" style="width: 10px; height: 52px; left: -5px; top: -26px; transform: translateZ(-5px) rotateY(180deg); background: rgb(125, 138, 139); border-radius: 6px;"></div><div class="face  box-right" style="width: 10px; height: 52px; left: -5px; top: -26px; transform: translateX(5px) rotateY(90deg); background: rgb(99, 117, 121); border-radius: 6px;"></div><div class="face  box-left" style="width: 10px; height: 52px; left: -5px; top: -26px; transform: translateX(-5px) rotateY(-90deg); background: rgb(103, 121, 125); border-radius: 6px;"></div></div><div class="node" style="transform: translate3d(108px, -311px, -156px);"><div class="face  box-top" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateY(-19px) rotateX(90deg); background: rgb(146, 160, 159); border-radius: 6px;"></div><div class="face  box-bottom" style="width: 10px; height: 10px; left: -5px; top: -5px; transform: translateY(19px) rotateX(-90deg); background: rgb(85, 101, 104); border-radius: 6px;"></div><div class="face  box-front" style="width: 10px; height: 38px; left: -5px; top: -19px; transform: translateZ(5px); background: rgb(113, 129, 132); border-radius: 6px;"></div><div class="face  box-back" style="width: 10px; height: 38px; left: -5px; top: -19px; transform: translateZ(-5px) rotateY(180deg); background: rgb(100, 116, 119); border-radius: 6px;"></div><div class="face  box-right" style="width: 10px; height: 38px; left: -5px; top: -19px; transform: translateX(5px) rotateY(90deg); background: rgb(80, 99, 106); border-radius: 6px;"></div><div class="face  box-left" style="width: 10px; height: 38px; left: -5px; top: -19px; transform: translateX(-5px) rotateY(-90deg); background: rgb(84, 103, 110); border-radius: 6px;"></div></div><div class="node" style="transform: translate3d(-173px, -117.5px, 89px);"><div class="face glass" style="width: 172px; height: 163px; left: -86px; top: -81.5px; transform: rotateY(0deg); border-radius: 2px;">
+        <div class="window-interior">
+          <div class="shelf" style="--c1:#e26f63;--c2:#eab85c;--c3:#5ab4b5"><i style="left:4%;background:#e26f63"></i></div>
+          <div class="shelf" style="--c1:#779bd4;--c2:#ef9c82;--c3:#76bc7e"><i style="left:13%;background:#779bd4"></i></div>
+          <div class="shelf" style="--c1:#e9c15d;--c2:#74aec0;--c3:#d47b7e"><i style="left:6%;background:#e9c15d"></i></div>
+          <div class="shelf" style="--c1:#74b784;--c2:#d77e88;--c3:#d6b95a"><i style="left:18%;background:#74b784"></i></div>
+        </div></div></div><div class="node" style="transform: translate3d(-18px, -117.5px, 89px);"><div class="face glass" style="width: 103px; height: 163px; left: -51.5px; top: -81.5px; transform: rotateY(0deg); border-radius: 2px;">
+        <div class="window-interior">
+          <div class="shelf" style="--c1:#d67a70;--c2:#efb863;--c3:#6bbdb7"><i style="left:10%;background:#d67a70"></i></div>
+          <div class="shelf" style="--c1:#6a9fc8;--c2:#e79479;--c3:#77b981"><i style="left:5%;background:#6a9fc8"></i></div>
+          <div class="shelf" style="--c1:#e8c15a;--c2:#75afbe;--c3:#d8807c"><i style="left:13%;background:#e8c15a"></i></div>
+          <div class="shelf" style="--c1:#71b68a;--c2:#d27e88;--c3:#d8bb5b"><i style="left:2%;background:#71b68a"></i></div>
+        </div></div></div><div class="node" style="transform: translate3d(99px, -117px, 91px);"><div class="face glass door-light" style="width: 92px; height: 184px; left: -46px; top: -92px; transform: rotateY(0deg); border-radius: 2px;"><div style="position: absolute; left: 48%; top: 0px; bottom: 0px; width: 4px; background: linear-gradient(rgb(37, 51, 60), rgb(168, 177, 177), rgb(38, 51, 60)); z-index: 5;"></div></div></div><div class="node" style="transform: translate3d(57px, -105px, 95px);"><div class="face handle" style="width: 3.5px; height: 38px; left: -1.75px; top: -19px; transform: rotateY(0deg); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(114px, -105px, 95.5px);"><div class="face handle" style="width: 3.5px; height: 38px; left: -1.75px; top: -19px; transform: rotateY(0deg); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-259px, -125px, 96px);"><div class="face mullion box-top" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateY(-100px) rotateX(90deg); background: rgb(56, 71, 80); border-radius: 1px;"></div><div class="face mullion box-bottom" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateY(100px) rotateX(-90deg); background: rgb(10, 25, 34); border-radius: 1px;"></div><div class="face mullion box-front" style="width: 8px; height: 200px; left: -4px; top: -100px; transform: translateZ(3.5px); background: rgb(38, 53, 62); border-radius: 1px;"></div><div class="face mullion box-back" style="width: 8px; height: 200px; left: -4px; top: -100px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(25, 40, 49); border-radius: 1px;"></div><div class="face mullion box-right" style="width: 7px; height: 200px; left: -3.5px; top: -100px; transform: translateX(4px) rotateY(90deg); background: rgb(21, 36, 45); border-radius: 1px;"></div><div class="face mullion box-left" style="width: 7px; height: 200px; left: -3.5px; top: -100px; transform: translateX(-4px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(-70px, -124.5px, 96px);"><div class="face mullion box-top" style="width: 7.5px; height: 7px; left: -3.75px; top: -3.5px; transform: translateY(-99.5px) rotateX(90deg); background: rgb(56, 71, 80); border-radius: 1px;"></div><div class="face mullion box-bottom" style="width: 7.5px; height: 7px; left: -3.75px; top: -3.5px; transform: translateY(99.5px) rotateX(-90deg); background: rgb(10, 25, 34); border-radius: 1px;"></div><div class="face mullion box-front" style="width: 7.5px; height: 199px; left: -3.75px; top: -99.5px; transform: translateZ(3.5px); background: rgb(38, 53, 62); border-radius: 1px;"></div><div class="face mullion box-back" style="width: 7.5px; height: 199px; left: -3.75px; top: -99.5px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(25, 40, 49); border-radius: 1px;"></div><div class="face mullion box-right" style="width: 7px; height: 199px; left: -3.5px; top: -99.5px; transform: translateX(3.75px) rotateY(90deg); background: rgb(21, 36, 45); border-radius: 1px;"></div><div class="face mullion box-left" style="width: 7px; height: 199px; left: -3.5px; top: -99.5px; transform: translateX(-3.75px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(45px, -126px, 97px);"><div class="face mullion box-top" style="width: 8.5px; height: 7px; left: -4.25px; top: -3.5px; transform: translateY(-101px) rotateX(90deg); background: rgb(56, 71, 80); border-radius: 1px;"></div><div class="face mullion box-bottom" style="width: 8.5px; height: 7px; left: -4.25px; top: -3.5px; transform: translateY(101px) rotateX(-90deg); background: rgb(10, 25, 34); border-radius: 1px;"></div><div class="face mullion box-front" style="width: 8.5px; height: 202px; left: -4.25px; top: -101px; transform: translateZ(3.5px); background: rgb(38, 53, 62); border-radius: 1px;"></div><div class="face mullion box-back" style="width: 8.5px; height: 202px; left: -4.25px; top: -101px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(25, 40, 49); border-radius: 1px;"></div><div class="face mullion box-right" style="width: 7px; height: 202px; left: -3.5px; top: -101px; transform: translateX(4.25px) rotateY(90deg); background: rgb(21, 36, 45); border-radius: 1px;"></div><div class="face mullion box-left" style="width: 7px; height: 202px; left: -3.5px; top: -101px; transform: translateX(-4.25px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(147px, -126px, 97px);"><div class="face mullion box-top" style="width: 9px; height: 7px; left: -4.5px; top: -3.5px; transform: translateY(-101px) rotateX(90deg); background: rgb(56, 71, 80); border-radius: 1px;"></div><div class="face mullion box-bottom" style="width: 9px; height: 7px; left: -4.5px; top: -3.5px; transform: translateY(101px) rotateX(-90deg); background: rgb(10, 25, 34); border-radius: 1px;"></div><div class="face mullion box-front" style="width: 9px; height: 202px; left: -4.5px; top: -101px; transform: translateZ(3.5px); background: rgb(38, 53, 62); border-radius: 1px;"></div><div class="face mullion box-back" style="width: 9px; height: 202px; left: -4.5px; top: -101px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(25, 40, 49); border-radius: 1px;"></div><div class="face mullion box-right" style="width: 7px; height: 202px; left: -3.5px; top: -101px; transform: translateX(4.5px) rotateY(90deg); background: rgb(21, 36, 45); border-radius: 1px;"></div><div class="face mullion box-left" style="width: 7px; height: 202px; left: -3.5px; top: -101px; transform: translateX(-4.5px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(39px, -8.1px, 118px);"><div class="face ground doormat" style="width: 119px; height: 44px; left: -59.5px; top: -22px; transform: rotateX(90deg); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(44px, -178.5px, 98.5px);"><div class="face traffic-panel" style="width: 18px; height: 13px; left: -9px; top: -6.5px; transform: rotateY(0deg); border-radius: 2px;"><div style="position: absolute; inset: 0px; display: grid; place-items: center; color: rgb(243, 255, 239); font: 900 7px Arial; letter-spacing: 0.05em;">OPEN</div></div></div><div class="node" style="transform: translate3d(-62px, -245px, 98.5px);"><div class="face store-sign" style="width: 378px; height: 54px; left: -189px; top: -27px; transform: rotateY(0deg); border-radius: 2px;">
+        <div class="sign-pin"></div>
+        <div class="sign-copy"><span class="jp">まちかどマート</span><span class="en">24H</span></div></div></div><div class="node" style="transform: translate3d(-35px, -207.5px, 112px);"><div class="face awning box-top" style="width: 394px; height: 72px; left: -197px; top: -36px; transform: translateY(-5.5px) rotateX(90deg); background: rgb(65, 169, 176); border-radius: 2px;"></div><div class="face awning box-bottom" style="width: 394px; height: 72px; left: -197px; top: -36px; transform: translateY(5.5px) rotateX(-90deg); background: rgb(0, 92, 105); border-radius: 2px;"></div><div class="face awning box-front" style="width: 394px; height: 11px; left: -197px; top: -5.5px; transform: translateZ(36px); background: rgb(26, 120, 133); border-radius: 2px;"></div><div class="face awning box-back" style="width: 394px; height: 11px; left: -197px; top: -5.5px; transform: translateZ(-36px) rotateY(180deg); background: rgb(13, 107, 120); border-radius: 2px;"></div><div class="face awning box-right" style="width: 72px; height: 11px; left: -36px; top: -5.5px; transform: translateX(197px) rotateY(90deg); background: rgb(21, 85, 96); border-radius: 2px;"></div><div class="face awning box-left" style="width: 72px; height: 11px; left: -36px; top: -5.5px; transform: translateX(-197px) rotateY(-90deg); background: rgb(25, 89, 100); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-35px, -200px, 149px);"><div class="face awning-valence" style="width: 394px; height: 22px; left: -197px; top: -11px; transform: rotateY(0deg); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(-35px, -189.75px, 150.3px);"><div class="face" style="width: 388px; height: 2.5px; left: -194px; top: -1.25px; transform: rotateY(0deg); background: linear-gradient(90deg, rgb(123, 246, 255), rgb(231, 255, 240), rgb(123, 246, 255)); border-radius: 3px; box-shadow: rgba(115, 244, 255, 0.9) 0px 0px 10px;"></div></div><div class="node" style="transform: translate3d(-243px, -160px, 150px);"><div class="face coffee-sign" style="width: 30px; height: 72px; left: -15px; top: -36px; transform: rotateY(0deg); border-radius: 3px;"><span>珈琲</span></div></div><div class="node" style="transform: translate3d(-243px, -204px, 147px);"><div class="face  box-top" style="width: 3.5px; height: 3.5px; left: -1.75px; top: -1.75px; transform: translateY(-9px) rotateX(90deg); background: rgb(58, 74, 80); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 3.5px; height: 3.5px; left: -1.75px; top: -1.75px; transform: translateY(9px) rotateX(-90deg); background: rgb(12, 28, 34); border-radius: 3px;"></div><div class="face  box-front" style="width: 3.5px; height: 18px; left: -1.75px; top: -9px; transform: translateZ(1.75px); background: rgb(40, 56, 62); border-radius: 3px;"></div><div class="face  box-back" style="width: 3.5px; height: 18px; left: -1.75px; top: -9px; transform: translateZ(-1.75px) rotateY(180deg); background: rgb(27, 43, 49); border-radius: 3px;"></div><div class="face  box-right" style="width: 3.5px; height: 18px; left: -1.75px; top: -9px; transform: translateX(1.75px) rotateY(90deg); background: rgb(23, 39, 45); border-radius: 3px;"></div><div class="face  box-left" style="width: 3.5px; height: 18px; left: -1.75px; top: -9px; transform: translateX(-1.75px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(168px, -192.5px, 2px);"><div class="face side-neon" style="width: 88px; height: 23px; left: -44px; top: -11.5px; transform: rotateY(90deg); border-radius: 2px;"><span>OPEN 24H</span></div></div><div class="node" style="transform: translate3d(167.5px, -131px, -76px);"><div class="face poster" style="width: 102px; height: 122px; left: -51px; top: -61px; transform: rotateY(90deg); border-radius: 2px;"><div class="poster-title">夏の夜市</div><div class="poster-mark"></div><div class="poster-lines"></div></div></div><div class="node" style="transform: translate3d(167.8px, -133px, -172px);"><div class="face poster" style="width: 48px; height: 62px; left: -24px; top: -31px; transform: rotateY(90deg); border-radius: 2px;"><div class="poster-title" style="font-size:7px">NEW<br>DRINK</div><div class="poster-mark" style="background:#5ab6bc"></div></div></div><div class="node" style="transform: translate3d(190px, -182px, -205px);"><div class="face  box-top" style="width: 50px; height: 60px; left: -25px; top: -30px; transform: translateY(-24px) rotateX(90deg); background: rgb(212, 214, 206); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 50px; height: 60px; left: -25px; top: -30px; transform: translateY(24px) rotateX(-90deg); background: rgb(155, 161, 157); border-radius: 3px;"></div><div class="face  box-front" style="width: 50px; height: 48px; left: -25px; top: -24px; transform: translateZ(30px); background: rgb(183, 189, 185); border-radius: 3px;"></div><div class="face  box-back" style="width: 50px; height: 48px; left: -25px; top: -24px; transform: translateZ(-30px) rotateY(180deg); background: rgb(170, 176, 172); border-radius: 3px;"></div><div class="face  box-right" style="width: 60px; height: 48px; left: -30px; top: -24px; transform: translateX(25px) rotateY(90deg); background: rgb(133, 143, 142); border-radius: 3px;"></div><div class="face  box-left" style="width: 60px; height: 48px; left: -30px; top: -24px; transform: translateX(-25px) rotateY(-90deg); background: rgb(137, 147, 146); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(216px, -181.5px, -205px);"><div class="face  box-top" style="width: 2px; height: 48px; left: -1px; top: -24px; transform: translateY(-17.5px) rotateX(90deg); background: rgb(92, 102, 105); border-radius: 8px;"></div><div class="face  box-bottom" style="width: 2px; height: 48px; left: -1px; top: -24px; transform: translateY(17.5px) rotateX(-90deg); background: rgb(46, 57, 63); border-radius: 8px;"></div><div class="face  box-front" style="width: 2px; height: 35px; left: -1px; top: -17.5px; transform: translateZ(24px); background: rgb(74, 85, 91); border-radius: 8px;"></div><div class="face  box-back" style="width: 2px; height: 35px; left: -1px; top: -17.5px; transform: translateZ(-24px) rotateY(180deg); background: rgb(61, 72, 78); border-radius: 8px;"></div><div class="face  box-right" style="width: 48px; height: 35px; left: -24px; top: -17.5px; transform: translateX(1px) rotateY(90deg); background: rgb(50, 61, 68); border-radius: 8px;"></div><div class="face  box-left" style="width: 48px; height: 35px; left: -24px; top: -17.5px; transform: translateX(-1px) rotateY(-90deg); background: rgb(54, 65, 72); border-radius: 8px;"></div></div><div class="node" style="transform: translate3d(217.3px, -152.75px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(217.3px, -157.25px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(217.3px, -161.75px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(217.3px, -166.25px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(217.3px, -170.75px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(217.3px, -175.25px, -205px);"><div class="face" style="width: 40px; height: 1.5px; left: -20px; top: -0.75px; transform: rotateY(90deg); background: rgb(49, 62, 69); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(247px, -90px, 64px);"><div class="face vending-body box-top" style="width: 82px; height: 58px; left: -41px; top: -29px; transform: translateY(-84px) rotateX(90deg); background: rgb(210, 108, 99); border-radius: 3px;"></div><div class="face vending-body box-bottom" style="width: 82px; height: 58px; left: -41px; top: -29px; transform: translateY(84px) rotateX(-90deg); background: rgb(152, 38, 39); border-radius: 3px;"></div><div class="face vending-body box-front" style="width: 82px; height: 168px; left: -41px; top: -84px; transform: translateZ(29px); background: rgb(184, 73, 73); border-radius: 3px;"></div><div class="face vending-body box-back" style="width: 82px; height: 168px; left: -41px; top: -84px; transform: translateZ(-29px) rotateY(180deg); background: rgb(167, 53, 54); border-radius: 3px;"></div><div class="face vending-body box-right" style="width: 58px; height: 168px; left: -29px; top: -84px; transform: translateX(41px) rotateY(90deg); background: rgb(125, 48, 56); border-radius: 3px;"></div><div class="face vending-body box-left" style="width: 58px; height: 168px; left: -29px; top: -84px; transform: translateX(-41px) rotateY(-90deg); background: rgb(129, 52, 60); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(247px, -89px, 93.6px);"><div class="face vending-panel" style="width: 70px; height: 146px; left: -35px; top: -73px; transform: rotateY(0deg); border-radius: 2px;"><div class="drink-grid"><i style="--drink: #ef745f;"></i><i style="--drink: #e9b55b;"></i><i style="--drink: #6db2c0;"></i><i style="--drink: #dd7d87;"></i><i style="--drink: #74b594;"></i><i style="--drink: #e6c25d;"></i><i style="--drink: #e77d63;"></i><i style="--drink: #729bc9;"></i><i style="--drink: #d6a75b;"></i><i style="--drink: #ed857d;"></i><i style="--drink: #63b1b4;"></i><i style="--drink: #86bd78;"></i></div><div class="vending-copy">COLD DRINKS</div></div></div><div class="node" style="transform: translate3d(247px, -5.9px, 115px);"><div class="face ground road-reflection" style="width: 94px; height: 24px; left: -47px; top: -12px; transform: rotateX(90deg); background: linear-gradient(90deg, transparent, rgba(255, 142, 112, 0.6), transparent); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(220px, -3px, -255px);"><div class="face ground" style="width: 65px; height: 124px; left: -32.5px; top: -62px; transform: rotateX(90deg); background: linear-gradient(145deg, rgb(22, 35, 52), rgb(8, 14, 24)); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(254px, -95.5px, -226px);"><div class="face" style="width: 12px; height: 95px; left: -6px; top: -47.5px; transform: rotateY(90deg); background: rgb(83, 97, 102); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(260px, -128px, -224px);"><div class="face notice-board" style="width: 76px; height: 96px; left: -38px; top: -48px; transform: rotateY(90deg); border-radius: 2px;">
+        <div class="poster" style="position:absolute;left:8%;top:10%;width:38%;height:67%;border-width:2px"></div>
+        <div class="poster" style="position:absolute;right:8%;top:13%;width:36%;height:57%;border-width:2px;transform:rotate(3deg)"></div>
+        <div style="position:absolute;left:12%;right:12%;bottom:8%;height:1px;background:#7d8887"></div></div></div><div class="node" style="transform: translate3d(220px, -7px, -255px);"><div class="face  box-top" style="width: 62px; height: 118px; left: -31px; top: -59px; transform: translateY(-2.5px) rotateX(90deg); background: rgb(53, 69, 77); border-radius: 1px;"></div><div class="face  box-bottom" style="width: 62px; height: 118px; left: -31px; top: -59px; transform: translateY(2.5px) rotateX(-90deg); background: rgb(7, 23, 31); border-radius: 1px;"></div><div class="face  box-front" style="width: 62px; height: 5px; left: -31px; top: -2.5px; transform: translateZ(59px); background: rgb(35, 51, 59); border-radius: 1px;"></div><div class="face  box-back" style="width: 62px; height: 5px; left: -31px; top: -2.5px; transform: translateZ(-59px) rotateY(180deg); background: rgb(22, 38, 46); border-radius: 1px;"></div><div class="face  box-right" style="width: 118px; height: 5px; left: -59px; top: -2.5px; transform: translateX(31px) rotateY(90deg); background: rgb(18, 34, 42); border-radius: 1px;"></div><div class="face  box-left" style="width: 118px; height: 5px; left: -59px; top: -2.5px; transform: translateX(-31px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(199px, -17.5px, -182px);"><div class="face ground" style="width: 48px; height: 158px; left: -24px; top: -79px; transform: rotateX(90deg); background: linear-gradient(90deg, rgba(4, 8, 16, 0.88), rgba(20, 31, 42, 0.72)), repeating-linear-gradient(90deg, transparent 0px, transparent 10px, rgba(170, 205, 205, 0.08) 11px, rgba(170, 205, 205, 0.08) 12px); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(176px, -79px, -112px);"><div class="face  box-top" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(-61px) rotateX(90deg); background: rgb(112, 128, 128); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(61px) rotateX(-90deg); background: rgb(61, 79, 80); border-radius: 3px;"></div><div class="face  box-front" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateZ(3.5px); background: rgb(89, 107, 108); border-radius: 3px;"></div><div class="face  box-back" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(76, 94, 95); border-radius: 3px;"></div><div class="face  box-right" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateX(3.5px) rotateY(90deg); background: rgb(58, 78, 82); border-radius: 3px;"></div><div class="face  box-left" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateX(-3.5px) rotateY(-90deg); background: rgb(62, 82, 86); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(222px, -79px, -112px);"><div class="face  box-top" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(-61px) rotateX(90deg); background: rgb(112, 128, 128); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(61px) rotateX(-90deg); background: rgb(61, 79, 80); border-radius: 3px;"></div><div class="face  box-front" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateZ(3.5px); background: rgb(89, 107, 108); border-radius: 3px;"></div><div class="face  box-back" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(76, 94, 95); border-radius: 3px;"></div><div class="face  box-right" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateX(3.5px) rotateY(90deg); background: rgb(58, 78, 82); border-radius: 3px;"></div><div class="face  box-left" style="width: 7px; height: 122px; left: -3.5px; top: -61px; transform: translateX(-3.5px) rotateY(-90deg); background: rgb(62, 82, 86); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(199px, -143.5px, -112px);"><div class="face  box-top" style="width: 53px; height: 8px; left: -26.5px; top: -4px; transform: translateY(-3.5px) rotateX(90deg); background: rgb(124, 137, 135); border-radius: 2px;"></div><div class="face  box-bottom" style="width: 53px; height: 8px; left: -26.5px; top: -4px; transform: translateY(3.5px) rotateX(-90deg); background: rgb(68, 86, 88); border-radius: 2px;"></div><div class="face  box-front" style="width: 53px; height: 7px; left: -26.5px; top: -3.5px; transform: translateZ(4px); background: rgb(96, 114, 116); border-radius: 2px;"></div><div class="face  box-back" style="width: 53px; height: 7px; left: -26.5px; top: -3.5px; transform: translateZ(-4px) rotateY(180deg); background: rgb(83, 101, 103); border-radius: 2px;"></div><div class="face  box-right" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateX(26.5px) rotateY(90deg); background: rgb(63, 84, 88); border-radius: 2px;"></div><div class="face  box-left" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateX(-26.5px) rotateY(-90deg); background: rgb(67, 88, 92); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(199px, -170px, -107.5px);"><div class="face alley-sign" style="width: 32px; height: 44px; left: -16px; top: -22px; transform: rotateY(0deg); border-radius: 2px;"><span>路地</span></div></div><div class="node" style="transform: translate3d(203px, -137px, -104px);"><div class="face  box-top" style="width: 3.5px; height: 3.5px; left: -1.75px; top: -1.75px; transform: translateY(-10px) rotateX(90deg); background: rgb(55, 70, 77); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 3.5px; height: 3.5px; left: -1.75px; top: -1.75px; transform: translateY(10px) rotateX(-90deg); background: rgb(9, 24, 31); border-radius: 3px;"></div><div class="face  box-front" style="width: 3.5px; height: 20px; left: -1.75px; top: -10px; transform: translateZ(1.75px); background: rgb(37, 52, 59); border-radius: 3px;"></div><div class="face  box-back" style="width: 3.5px; height: 20px; left: -1.75px; top: -10px; transform: translateZ(-1.75px) rotateY(180deg); background: rgb(24, 39, 46); border-radius: 3px;"></div><div class="face  box-right" style="width: 3.5px; height: 20px; left: -1.75px; top: -10px; transform: translateX(1.75px) rotateY(90deg); background: rgb(20, 35, 42); border-radius: 3px;"></div><div class="face  box-left" style="width: 3.5px; height: 20px; left: -1.75px; top: -10px; transform: translateX(-1.75px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(203px, -124px, -102px);"><div class="face lamp-light" style="width: 16px; height: 12px; left: -8px; top: -6px; transform: rotateY(0deg); border-radius: 7px;"></div></div><div class="node" style="transform: translate3d(203px, -18.1px, -118px);"><div class="face ground road-reflection" style="width: 44px; height: 38px; left: -22px; top: -19px; transform: rotateX(90deg); background: radial-gradient(rgba(255, 201, 112, 0.62), transparent 70%); border-radius: 0px;"></div></div><div class="node" style="transform: translate3d(173px, -37px, 147px);"><div class="face  box-top" style="width: 32px; height: 32px; left: -16px; top: -16px; transform: translateY(-31px) rotateX(90deg); background: rgb(102, 121, 120); border-radius: 5px;"></div><div class="face  box-bottom" style="width: 32px; height: 32px; left: -16px; top: -16px; transform: translateY(31px) rotateX(-90deg); background: rgb(38, 60, 62); border-radius: 5px;"></div><div class="face  box-front" style="width: 32px; height: 62px; left: -16px; top: -31px; transform: translateZ(16px); background: rgb(66, 88, 90); border-radius: 5px;"></div><div class="face  box-back" style="width: 32px; height: 62px; left: -16px; top: -31px; transform: translateZ(-16px) rotateY(180deg); background: rgb(53, 75, 77); border-radius: 5px;"></div><div class="face  box-right" style="width: 32px; height: 62px; left: -16px; top: -31px; transform: translateX(16px) rotateY(90deg); background: rgb(48, 68, 71); border-radius: 5px;"></div><div class="face  box-left" style="width: 32px; height: 62px; left: -16px; top: -31px; transform: translateX(-16px) rotateY(-90deg); background: rgb(52, 72, 75); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(173px, -70.5px, 147px);"><div class="face trash-lid box-top" style="width: 36px; height: 36px; left: -18px; top: -18px; transform: translateY(-4px) rotateX(90deg); background: rgb(120, 136, 140); border-radius: 6px;"></div><div class="face trash-lid box-bottom" style="width: 36px; height: 36px; left: -18px; top: -18px; transform: translateY(4px) rotateX(-90deg); background: rgb(74, 90, 94); border-radius: 6px;"></div><div class="face trash-lid box-front" style="width: 36px; height: 8px; left: -18px; top: -4px; transform: translateZ(18px); background: rgb(102, 118, 122); border-radius: 6px;"></div><div class="face trash-lid box-back" style="width: 36px; height: 8px; left: -18px; top: -4px; transform: translateZ(-18px) rotateY(180deg); background: rgb(89, 105, 109); border-radius: 6px;"></div><div class="face trash-lid box-right" style="width: 36px; height: 8px; left: -18px; top: -4px; transform: translateX(18px) rotateY(90deg); background: rgb(85, 101, 105); border-radius: 6px;"></div><div class="face trash-lid box-left" style="width: 36px; height: 8px; left: -18px; top: -4px; transform: translateX(-18px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 6px;"></div></div><div class="node" style="transform: translate3d(173px, -22px, 163.9px);"><div class="face" style="width: 14px; height: 12px; left: -7px; top: -6px; transform: rotateY(0deg); background: rgb(215, 224, 208); border-radius: 1px;"></div></div><div class="node" style="transform: translate3d(-2px, -32px, 136px);"><div class="face  box-top" style="width: 34px; height: 28px; left: -17px; top: -14px; transform: translateY(-26px) rotateX(90deg); background: rgb(121, 132, 134); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 34px; height: 28px; left: -17px; top: -14px; transform: translateY(26px) rotateX(-90deg); background: rgb(67, 81, 85); border-radius: 4px;"></div><div class="face  box-front" style="width: 34px; height: 52px; left: -17px; top: -26px; transform: translateZ(14px); background: rgb(95, 109, 113); border-radius: 4px;"></div><div class="face  box-back" style="width: 34px; height: 52px; left: -17px; top: -26px; transform: translateZ(-14px) rotateY(180deg); background: rgb(82, 96, 100); border-radius: 4px;"></div><div class="face  box-right" style="width: 28px; height: 52px; left: -14px; top: -26px; transform: translateX(17px) rotateY(90deg); background: rgb(65, 82, 88); border-radius: 4px;"></div><div class="face  box-left" style="width: 28px; height: 52px; left: -14px; top: -26px; transform: translateX(-17px) rotateY(-90deg); background: rgb(69, 86, 92); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-12px, -58px, 137px);"><div class="face umbrella" style="width: 11px; height: 62px; left: -5.5px; top: -31px; transform: rotateZ(-10deg); border-radius: 10px; --u-color: #61aeb4;"></div></div><div class="node" style="transform: translate3d(0px, -58px, 134px);"><div class="face umbrella" style="width: 11px; height: 62px; left: -5.5px; top: -31px; transform: rotateZ(4deg); border-radius: 10px; --u-color: #d8908c;"></div></div><div class="node" style="transform: translate3d(11px, -58px, 140px);"><div class="face umbrella" style="width: 11px; height: 62px; left: -5.5px; top: -31px; transform: rotateZ(12deg); border-radius: 10px; --u-color: #d5ba71;"></div></div><div class="node" style="transform: translate3d(-242px, 0px, 162px);"><div class="node" style="transform: translate3d(-42px, -40px, 0px);"><div class="face bike-wheel" style="width: 74px; height: 74px; left: -37px; top: -37px;"></div></div><div class="node" style="transform: translate3d(43px, -40px, 0px);"><div class="face bike-wheel" style="width: 74px; height: 74px; left: -37px; top: -37px;"></div></div><div class="node" style="transform: translate3d(-22.5px, -56px, 0px);"><div class="face wire bike-frame" style="width: 50.448px; height: 4px; left: -25.224px; top: -2px; transform: rotateZ(-0.687124rad); background: rgb(66, 152, 157);"></div></div><div class="node" style="transform: translate3d(11px, -55px, 0px);"><div class="face wire bike-frame" style="width: 44.0454px; height: 4px; left: -22.0227px; top: -2px; transform: rotateZ(0.881872rad); background: rgb(66, 152, 157);"></div></div><div class="node" style="transform: translate3d(8.5px, -38px, 0px);"><div class="face wire bike-frame" style="width: 33px; height: 4px; left: -16.5px; top: -2px; transform: rotateZ(-3.14159rad); background: rgb(91, 175, 177);"></div></div><div class="node" style="transform: translate3d(-25px, -39px, 0px);"><div class="face wire bike-frame" style="width: 34.0588px; height: 4px; left: -17.0294px; top: -2px; transform: rotateZ(-3.08284rad); background: rgb(91, 175, 177);"></div></div><div class="node" style="transform: translate3d(-6.5px, -82px, 0px);"><div class="face wire bike-frame" style="width: 21.1896px; height: 3.5px; left: -10.5948px; top: -1.75px; transform: rotateZ(-1.90747rad); background: rgb(159, 177, 175);"></div></div><div class="node" style="transform: translate3d(34px, -39px, 0px);"><div class="face wire bike-frame" style="width: 18.1108px; height: 3px; left: -9.05539px; top: -1.5px; transform: rotateZ(-0.110657rad); background: rgb(159, 177, 175);"></div></div><div class="node" style="transform: translate3d(-5.5px, -55px, 0px);"><div class="face wire bike-frame" style="width: 34.3657px; height: 2.3px; left: -17.1828px; top: -1.15px; transform: rotateZ(-1.42478rad); background: rgb(145, 161, 164);"></div></div><div class="node" style="transform: translate3d(32px, -86px, 0px);"><div class="face  box-top" style="width: 32px; height: 18px; left: -16px; top: -9px; transform: translateY(-9px) rotateX(90deg); background: rgb(164, 177, 174); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 32px; height: 18px; left: -16px; top: -9px; transform: translateY(9px) rotateX(-90deg); background: rgb(101, 119, 123); border-radius: 4px;"></div><div class="face  box-front" style="width: 32px; height: 18px; left: -16px; top: -9px; transform: translateZ(9px); background: rgb(129, 147, 151); border-radius: 4px;"></div><div class="face  box-back" style="width: 32px; height: 18px; left: -16px; top: -9px; transform: translateZ(-9px) rotateY(180deg); background: rgb(116, 134, 138); border-radius: 4px;"></div><div class="face  box-right" style="width: 18px; height: 18px; left: -9px; top: -9px; transform: translateX(16px) rotateY(90deg); background: rgb(83, 103, 109); border-radius: 4px;"></div><div class="face  box-left" style="width: 18px; height: 18px; left: -9px; top: -9px; transform: translateX(-16px) rotateY(-90deg); background: rgb(87, 107, 113); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(31px, -11.5px, 0px);"><div class="face wire" style="width: 22.2036px; height: 2px; left: -11.1018px; top: -1px; transform: rotateZ(0.625485rad); background: rgb(137, 150, 154);"></div></div></div><div class="node" style="transform: translate3d(-334px, -215px, 166px);"><div class="face pole-concrete box-top" style="width: 20px; height: 20px; left: -10px; top: -10px; transform: translateY(-210px) rotateX(90deg); background: rgb(124, 137, 136); border-radius: 3px;"></div><div class="face pole-concrete box-bottom" style="width: 20px; height: 20px; left: -10px; top: -10px; transform: translateY(210px) rotateX(-90deg); background: rgb(76, 91, 94); border-radius: 3px;"></div><div class="face pole-concrete box-front" style="width: 20px; height: 420px; left: -10px; top: -210px; transform: translateZ(10px); background: rgb(104, 119, 122); border-radius: 3px;"></div><div class="face pole-concrete box-back" style="width: 20px; height: 420px; left: -10px; top: -210px; transform: translateZ(-10px) rotateY(180deg); background: rgb(91, 106, 109); border-radius: 3px;"></div><div class="face pole-concrete box-right" style="width: 20px; height: 420px; left: -10px; top: -210px; transform: translateX(10px) rotateY(90deg); background: rgb(79, 94, 100); border-radius: 3px;"></div><div class="face pole-concrete box-left" style="width: 20px; height: 420px; left: -10px; top: -210px; transform: translateX(-10px) rotateY(-90deg); background: rgb(83, 98, 104); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(-334px, -423.5px, 166px);"><div class="face  box-top" style="width: 114px; height: 12px; left: -57px; top: -6px; transform: translateY(-4.5px) rotateX(90deg); background: rgb(104, 116, 122); border-radius: 2px;"></div><div class="face  box-bottom" style="width: 114px; height: 12px; left: -57px; top: -6px; transform: translateY(4.5px) rotateX(-90deg); background: rgb(49, 64, 70); border-radius: 2px;"></div><div class="face  box-front" style="width: 114px; height: 9px; left: -57px; top: -4.5px; transform: translateZ(6px); background: rgb(77, 92, 98); border-radius: 2px;"></div><div class="face  box-back" style="width: 114px; height: 9px; left: -57px; top: -4.5px; transform: translateZ(-6px) rotateY(180deg); background: rgb(64, 79, 85); border-radius: 2px;"></div><div class="face  box-right" style="width: 12px; height: 9px; left: -6px; top: -4.5px; transform: translateX(57px) rotateY(90deg); background: rgb(52, 70, 77); border-radius: 2px;"></div><div class="face  box-left" style="width: 12px; height: 9px; left: -6px; top: -4.5px; transform: translateX(-57px) rotateY(-90deg); background: rgb(56, 74, 81); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-334px, -398px, 166px);"><div class="face  box-top" style="width: 78px; height: 10px; left: -39px; top: -5px; transform: translateY(-4px) rotateX(90deg); background: rgb(104, 116, 122); border-radius: 2px;"></div><div class="face  box-bottom" style="width: 78px; height: 10px; left: -39px; top: -5px; transform: translateY(4px) rotateX(-90deg); background: rgb(49, 64, 70); border-radius: 2px;"></div><div class="face  box-front" style="width: 78px; height: 8px; left: -39px; top: -4px; transform: translateZ(5px); background: rgb(77, 92, 98); border-radius: 2px;"></div><div class="face  box-back" style="width: 78px; height: 8px; left: -39px; top: -4px; transform: translateZ(-5px) rotateY(180deg); background: rgb(64, 79, 85); border-radius: 2px;"></div><div class="face  box-right" style="width: 10px; height: 8px; left: -5px; top: -4px; transform: translateX(39px) rotateY(90deg); background: rgb(52, 70, 77); border-radius: 2px;"></div><div class="face  box-left" style="width: 10px; height: 8px; left: -5px; top: -4px; transform: translateX(-39px) rotateY(-90deg); background: rgb(56, 74, 81); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-376px, -429px, 166px);"><div class="face  box-top" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(-9px) rotateX(90deg); background: rgb(214, 219, 207); border-radius: 5px;"></div><div class="face  box-bottom" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(9px) rotateX(-90deg); background: rgb(161, 171, 161); border-radius: 5px;"></div><div class="face  box-front" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(3.5px); background: rgb(189, 199, 189); border-radius: 5px;"></div><div class="face  box-back" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(176, 186, 176); border-radius: 5px;"></div><div class="face  box-right" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(3.5px) rotateY(90deg); background: rgb(121, 135, 138); border-radius: 5px;"></div><div class="face  box-left" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(-3.5px) rotateY(-90deg); background: rgb(125, 139, 142); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(-334px, -429px, 166px);"><div class="face  box-top" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(-9px) rotateX(90deg); background: rgb(214, 219, 207); border-radius: 5px;"></div><div class="face  box-bottom" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(9px) rotateX(-90deg); background: rgb(161, 171, 161); border-radius: 5px;"></div><div class="face  box-front" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(3.5px); background: rgb(189, 199, 189); border-radius: 5px;"></div><div class="face  box-back" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(176, 186, 176); border-radius: 5px;"></div><div class="face  box-right" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(3.5px) rotateY(90deg); background: rgb(121, 135, 138); border-radius: 5px;"></div><div class="face  box-left" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(-3.5px) rotateY(-90deg); background: rgb(125, 139, 142); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(-292px, -429px, 166px);"><div class="face  box-top" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(-9px) rotateX(90deg); background: rgb(214, 219, 207); border-radius: 5px;"></div><div class="face  box-bottom" style="width: 7px; height: 7px; left: -3.5px; top: -3.5px; transform: translateY(9px) rotateX(-90deg); background: rgb(161, 171, 161); border-radius: 5px;"></div><div class="face  box-front" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(3.5px); background: rgb(189, 199, 189); border-radius: 5px;"></div><div class="face  box-back" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(176, 186, 176); border-radius: 5px;"></div><div class="face  box-right" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(3.5px) rotateY(90deg); background: rgb(121, 135, 138); border-radius: 5px;"></div><div class="face  box-left" style="width: 7px; height: 18px; left: -3.5px; top: -9px; transform: translateX(-3.5px) rotateY(-90deg); background: rgb(125, 139, 142); border-radius: 5px;"></div></div><div class="node" style="transform: translate3d(-334px, -393px, 145px);"><div class="face  box-top" style="width: 38px; height: 25px; left: -19px; top: -12.5px; transform: translateY(-24px) rotateX(90deg); background: rgb(171, 179, 175); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 38px; height: 25px; left: -19px; top: -12.5px; transform: translateY(24px) rotateX(-90deg); background: rgb(114, 125, 125); border-radius: 4px;"></div><div class="face  box-front" style="width: 38px; height: 48px; left: -19px; top: -24px; transform: translateZ(12.5px); background: rgb(142, 153, 153); border-radius: 4px;"></div><div class="face  box-back" style="width: 38px; height: 48px; left: -19px; top: -24px; transform: translateZ(-12.5px) rotateY(180deg); background: rgb(129, 140, 140); border-radius: 4px;"></div><div class="face  box-right" style="width: 25px; height: 48px; left: -12.5px; top: -24px; transform: translateX(19px) rotateY(90deg); background: rgb(100, 116, 120); border-radius: 4px;"></div><div class="face  box-left" style="width: 25px; height: 48px; left: -12.5px; top: -24px; transform: translateX(-19px) rotateY(-90deg); background: rgb(104, 120, 124); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-334px, -367.5px, 167px);"><div class="face pole-green" style="width: 9px; height: 49px; left: -4.5px; top: -24.5px; transform: rotateY(0deg); border-radius: 2px;"></div></div><div class="node" style="transform: translate3d(-334px, -329px, 198px);"><div class="face lamp-light" style="width: 34px; height: 22px; left: -17px; top: -11px; transform: rotateY(0deg); border-radius: 6px;"><div style="position: absolute; inset: 0px;"></div></div></div><div class="node" style="transform: translate3d(-334px, -5.8px, 198px);"><div class="face ground lamp-halo" style="width: 112px; height: 112px; left: -56px; top: -56px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(-323px, -448px, 166px);"><div class="face wire" style="width: 24.1661px; height: 1.45px; left: -12.083px; top: -0.725px; transform: rotateZ(0.426627rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-244.5px, -437.5px, 166px);"><div class="face wire" style="width: 135.447px; height: 1.45px; left: -67.7237px; top: -0.725px; transform: rotateZ(0.0813018rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-111.5px, -434.5px, 166px);"><div class="face wire" style="width: 131.095px; height: 1.45px; left: -65.5477px; top: -0.725px; transform: rotateZ(-0.0381494rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(164.5px, -432.5px, 166px);"><div class="face wire" style="width: 421.096px; height: 1.45px; left: -210.548px; top: -0.725px; transform: rotateZ(0.0213744rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-329px, -440px, 168px);"><div class="face wire" style="width: 14.1421px; height: 1.45px; left: -7.07107px; top: -0.725px; transform: rotateZ(0.785398rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-256.5px, -429.5px, 168px);"><div class="face wire" style="width: 135.447px; height: 1.45px; left: -67.7237px; top: -0.725px; transform: rotateZ(0.0813018rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-123.5px, -426.5px, 168px);"><div class="face wire" style="width: 131.095px; height: 1.45px; left: -65.5477px; top: -0.725px; transform: rotateZ(-0.0381494rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(158.5px, -424.5px, 168px);"><div class="face wire" style="width: 433.094px; height: 1.45px; left: -216.547px; top: -0.725px; transform: rotateZ(0.0207822rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-350px, -432px, 170px);"><div class="face wire" style="width: 33.5261px; height: 1.45px; left: -16.7631px; top: -0.725px; transform: rotateZ(2.83871rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-298.5px, -421.5px, 170px);"><div class="face wire" style="width: 135.447px; height: 1.45px; left: -67.7237px; top: -0.725px; transform: rotateZ(0.0813018rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-165.5px, -418.5px, 170px);"><div class="face wire" style="width: 131.095px; height: 1.45px; left: -65.5477px; top: -0.725px; transform: rotateZ(-0.0381494rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(137.5px, -416.5px, 170px);"><div class="face wire" style="width: 475.085px; height: 1.45px; left: -237.543px; top: -0.725px; transform: rotateZ(0.0189451rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-312px, -421px, 175px);"><div class="face wire" style="width: 60.8276px; height: 1.25px; left: -30.4138px; top: -0.625px; transform: rotateZ(0.762147rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-242.5px, -381px, 175px);"><div class="face wire" style="width: 102.318px; height: 1.25px; left: -51.1591px; top: -0.625px; transform: rotateZ(0.380506rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(-172.5px, -336px, 175px);"><div class="face wire" style="width: 68.7677px; height: 1.25px; left: -34.3839px; top: -0.625px; transform: rotateZ(0.857438rad); background: rgb(7, 16, 26);"></div></div><div class="node" style="transform: translate3d(318px, -157.5px, 263px);"><div class="face pole-green box-top" style="width: 11px; height: 11px; left: -5.5px; top: -5.5px; transform: translateY(-152.5px) rotateX(90deg); background: rgb(112, 128, 126); border-radius: 4px;"></div><div class="face pole-green box-bottom" style="width: 11px; height: 11px; left: -5.5px; top: -5.5px; transform: translateY(152.5px) rotateX(-90deg); background: rgb(52, 73, 74); border-radius: 4px;"></div><div class="face pole-green box-front" style="width: 11px; height: 305px; left: -5.5px; top: -152.5px; transform: translateZ(5.5px); background: rgb(80, 101, 102); border-radius: 4px;"></div><div class="face pole-green box-back" style="width: 11px; height: 305px; left: -5.5px; top: -152.5px; transform: translateZ(-5.5px) rotateY(180deg); background: rgb(67, 88, 89); border-radius: 4px;"></div><div class="face pole-green box-right" style="width: 11px; height: 305px; left: -5.5px; top: -152.5px; transform: translateX(5.5px) rotateY(90deg); background: rgb(53, 78, 80); border-radius: 4px;"></div><div class="face pole-green box-left" style="width: 11px; height: 305px; left: -5.5px; top: -152.5px; transform: translateX(-5.5px) rotateY(-90deg); background: rgb(57, 82, 84); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(302px, -315.5px, 263px);"><div class="face wire bike-frame" style="width: 35.3412px; height: 7px; left: -17.6706px; top: -3.5px; transform: rotateZ(-2.70326rad); background: rgb(61, 96, 97);"></div></div><div class="node" style="transform: translate3d(278px, -309.5px, 263px);"><div class="face lamp-light" style="width: 35px; height: 19px; left: -17.5px; top: -9.5px; transform: rotateY(0deg); border-radius: 8px;"></div></div><div class="node" style="transform: translate3d(276px, -5.8px, 262px);"><div class="face ground lamp-halo" style="width: 110px; height: 85px; left: -55px; top: -42.5px; transform: rotateX(90deg); border-radius: 50px;"></div></div><div class="node" style="transform: translate3d(-292px, -132.5px, 264px);"><div class="face  box-top" style="width: 9px; height: 9px; left: -4.5px; top: -4.5px; transform: translateY(-127.5px) rotateX(90deg); background: rgb(130, 144, 141); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 9px; height: 9px; left: -4.5px; top: -4.5px; transform: translateY(127.5px) rotateX(-90deg); background: rgb(77, 94, 97); border-radius: 3px;"></div><div class="face  box-front" style="width: 9px; height: 255px; left: -4.5px; top: -127.5px; transform: translateZ(4.5px); background: rgb(105, 122, 125); border-radius: 3px;"></div><div class="face  box-back" style="width: 9px; height: 255px; left: -4.5px; top: -127.5px; transform: translateZ(-4.5px) rotateY(180deg); background: rgb(92, 109, 112); border-radius: 3px;"></div><div class="face  box-right" style="width: 9px; height: 255px; left: -4.5px; top: -127.5px; transform: translateX(4.5px) rotateY(90deg); background: rgb(79, 97, 101); border-radius: 3px;"></div><div class="face  box-left" style="width: 9px; height: 255px; left: -4.5px; top: -127.5px; transform: translateX(-4.5px) rotateY(-90deg); background: rgb(83, 101, 105); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(-292px, -235.5px, 264px);"><div class="face traffic-panel" style="width: 55px; height: 39px; left: -27.5px; top: -19.5px; transform: rotateY(0deg); border-radius: 2px;"><div class="arrow"></div></div></div><div class="node" style="transform: translate3d(-292px, -180.5px, 264.5px);"><div class="face no-entry" style="width: 37px; height: 37px; left: -18.5px; top: -18.5px; transform: rotateY(0deg); border-radius: 50px;"><div></div></div></div><div class="node" style="transform: translate3d(-32px, -41px, 257px);"><div class="face  box-top" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(-35px) rotateX(90deg); background: rgb(194, 202, 197); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(35px) rotateX(-90deg); background: rgb(140, 150, 149); border-radius: 4px;"></div><div class="face  box-front" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(4px); background: rgb(168, 178, 177); border-radius: 4px;"></div><div class="face  box-back" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(-4px) rotateY(180deg); background: rgb(155, 165, 164); border-radius: 4px;"></div><div class="face  box-right" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(4px) rotateY(90deg); background: rgb(119, 135, 140); border-radius: 4px;"></div><div class="face  box-left" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(-4px) rotateY(-90deg); background: rgb(123, 139, 144); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(65px, -41px, 257px);"><div class="face  box-top" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(-35px) rotateX(90deg); background: rgb(194, 202, 197); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(35px) rotateX(-90deg); background: rgb(140, 150, 149); border-radius: 4px;"></div><div class="face  box-front" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(4px); background: rgb(168, 178, 177); border-radius: 4px;"></div><div class="face  box-back" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(-4px) rotateY(180deg); background: rgb(155, 165, 164); border-radius: 4px;"></div><div class="face  box-right" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(4px) rotateY(90deg); background: rgb(119, 135, 140); border-radius: 4px;"></div><div class="face  box-left" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(-4px) rotateY(-90deg); background: rgb(123, 139, 144); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(162px, -41px, 257px);"><div class="face  box-top" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(-35px) rotateX(90deg); background: rgb(194, 202, 197); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 8px; height: 8px; left: -4px; top: -4px; transform: translateY(35px) rotateX(-90deg); background: rgb(140, 150, 149); border-radius: 4px;"></div><div class="face  box-front" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(4px); background: rgb(168, 178, 177); border-radius: 4px;"></div><div class="face  box-back" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateZ(-4px) rotateY(180deg); background: rgb(155, 165, 164); border-radius: 4px;"></div><div class="face  box-right" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(4px) rotateY(90deg); background: rgb(119, 135, 140); border-radius: 4px;"></div><div class="face  box-left" style="width: 8px; height: 70px; left: -4px; top: -35px; transform: translateX(-4px) rotateY(-90deg); background: rgb(123, 139, 144); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(65px, -61.5px, 257px);"><div class="face rail box-top" style="width: 204px; height: 8px; left: -102px; top: -4px; transform: translateY(-3.5px) rotateX(90deg); background: rgb(188, 199, 197); border-radius: 4px;"></div><div class="face rail box-bottom" style="width: 204px; height: 8px; left: -102px; top: -4px; transform: translateY(3.5px) rotateX(-90deg); background: rgb(142, 153, 151); border-radius: 4px;"></div><div class="face rail box-front" style="width: 204px; height: 7px; left: -102px; top: -3.5px; transform: translateZ(4px); background: rgb(170, 181, 179); border-radius: 4px;"></div><div class="face rail box-back" style="width: 204px; height: 7px; left: -102px; top: -3.5px; transform: translateZ(-4px) rotateY(180deg); background: rgb(157, 168, 166); border-radius: 4px;"></div><div class="face rail box-right" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateX(102px) rotateY(90deg); background: rgb(153, 164, 162); border-radius: 4px;"></div><div class="face rail box-left" style="width: 8px; height: 7px; left: -4px; top: -3.5px; transform: translateX(-102px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(65px, -38.75px, 257px);"><div class="face rail box-top" style="width: 204px; height: 7px; left: -102px; top: -3.5px; transform: translateY(-2.75px) rotateX(90deg); background: rgb(199, 209, 207); border-radius: 4px;"></div><div class="face rail box-bottom" style="width: 204px; height: 7px; left: -102px; top: -3.5px; transform: translateY(2.75px) rotateX(-90deg); background: rgb(153, 163, 161); border-radius: 4px;"></div><div class="face rail box-front" style="width: 204px; height: 5.5px; left: -102px; top: -2.75px; transform: translateZ(3.5px); background: rgb(181, 191, 189); border-radius: 4px;"></div><div class="face rail box-back" style="width: 204px; height: 5.5px; left: -102px; top: -2.75px; transform: translateZ(-3.5px) rotateY(180deg); background: rgb(168, 178, 176); border-radius: 4px;"></div><div class="face rail box-right" style="width: 7px; height: 5.5px; left: -3.5px; top: -2.75px; transform: translateX(102px) rotateY(90deg); background: rgb(164, 174, 172); border-radius: 4px;"></div><div class="face rail box-left" style="width: 7px; height: 5.5px; left: -3.5px; top: -2.75px; transform: translateX(-102px) rotateY(-90deg); background: rgb(4, 4, 4); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(-255px, -34.5px, -247px);"><div class="face  box-top" style="width: 110px; height: 24px; left: -55px; top: -12px; transform: translateY(-28.5px) rotateX(90deg); background: rgb(171, 176, 167); border-radius: 3px;"></div><div class="face  box-bottom" style="width: 110px; height: 24px; left: -55px; top: -12px; transform: translateY(28.5px) rotateX(-90deg); background: rgb(115, 123, 117); border-radius: 3px;"></div><div class="face  box-front" style="width: 110px; height: 57px; left: -55px; top: -28.5px; transform: translateZ(12px); background: rgb(143, 151, 145); border-radius: 3px;"></div><div class="face  box-back" style="width: 110px; height: 57px; left: -55px; top: -28.5px; transform: translateZ(-12px) rotateY(180deg); background: rgb(130, 138, 132); border-radius: 3px;"></div><div class="face  box-right" style="width: 24px; height: 57px; left: -12px; top: -28.5px; transform: translateX(55px) rotateY(90deg); background: rgb(102, 115, 111); border-radius: 3px;"></div><div class="face  box-left" style="width: 24px; height: 57px; left: -12px; top: -28.5px; transform: translateX(-55px) rotateY(-90deg); background: rgb(106, 119, 115); border-radius: 3px;"></div></div><div class="node" style="transform: translate3d(276px, -27.5px, -223px);"><div class="face  box-top" style="width: 58px; height: 58px; left: -29px; top: -29px; transform: translateY(-19.5px) rotateX(90deg); background: rgb(89, 102, 101); border-radius: 8px;"></div><div class="face  box-bottom" style="width: 58px; height: 58px; left: -29px; top: -29px; transform: translateY(19.5px) rotateX(-90deg); background: rgb(40, 55, 57); border-radius: 8px;"></div><div class="face  box-front" style="width: 58px; height: 39px; left: -29px; top: -19.5px; transform: translateZ(29px); background: rgb(68, 83, 85); border-radius: 8px;"></div><div class="face  box-back" style="width: 58px; height: 39px; left: -29px; top: -19.5px; transform: translateZ(-29px) rotateY(180deg); background: rgb(55, 70, 72); border-radius: 8px;"></div><div class="face  box-right" style="width: 58px; height: 39px; left: -29px; top: -19.5px; transform: translateX(29px) rotateY(90deg); background: rgb(46, 61, 65); border-radius: 8px;"></div><div class="face  box-left" style="width: 58px; height: 39px; left: -29px; top: -19.5px; transform: translateX(-29px) rotateY(-90deg); background: rgb(50, 65, 69); border-radius: 8px;"></div></div><div class="node" style="transform: translate3d(276px, -92px, -223px);"><div class="face  box-top" style="width: 17px; height: 17px; left: -8.5px; top: -8.5px; transform: translateY(-45px) rotateX(90deg); background: rgb(128, 109, 90); border-radius: 4px;"></div><div class="face  box-bottom" style="width: 17px; height: 17px; left: -8.5px; top: -8.5px; transform: translateY(45px) rotateX(-90deg); background: rgb(75, 61, 47); border-radius: 4px;"></div><div class="face  box-front" style="width: 17px; height: 90px; left: -8.5px; top: -45px; transform: translateZ(8.5px); background: rgb(103, 89, 75); border-radius: 4px;"></div><div class="face  box-back" style="width: 17px; height: 90px; left: -8.5px; top: -45px; transform: translateZ(-8.5px) rotateY(180deg); background: rgb(90, 76, 62); border-radius: 4px;"></div><div class="face  box-right" style="width: 17px; height: 90px; left: -8.5px; top: -45px; transform: translateX(8.5px) rotateY(90deg); background: rgb(79, 68, 61); border-radius: 4px;"></div><div class="face  box-left" style="width: 17px; height: 90px; left: -8.5px; top: -45px; transform: translateX(-8.5px) rotateY(-90deg); background: rgb(83, 72, 65); border-radius: 4px;"></div></div><div class="node" style="transform: translate3d(276px, -184px, -223px);"><div class="face tree-crown" style="width: 132px; height: 112px; left: -66px; top: -56px; transform: rotateY(0deg) rotateZ(-4deg);"></div></div><div class="node" style="transform: translate3d(276px, -177px, -223px);"><div class="face tree-crown deep" style="width: 108px; height: 102px; left: -54px; top: -51px; transform: rotateY(90deg) rotateZ(5deg);"></div></div><div class="node" style="transform: translate3d(276px, -198px, -223px);"><div class="face tree-crown deep" style="width: 61px; height: 58px; left: -30.5px; top: -29px; transform: rotateY(0deg);"></div></div><div class="node" style="transform: translate3d(90px, -7px, 193px);"><div class="face ground ripple" style="width: 23px; height: 10.35px; left: -11.5px; top: -5.175px; transform: rotateX(90deg); border-radius: 50px; animation-delay: 0s;"></div></div><div class="node" style="transform: translate3d(240px, -7px, 255px);"><div class="face ground ripple" style="width: 20px; height: 9px; left: -10px; top: -4.5px; transform: rotateX(90deg); border-radius: 50px; animation-delay: 0.67s;"></div></div><div class="node" style="transform: translate3d(-164px, -7px, 290px);"><div class="face ground ripple" style="width: 28px; height: 12.6px; left: -14px; top: -6.3px; transform: rotateX(90deg); border-radius: 50px; animation-delay: 1.34s;"></div></div><div class="node" style="transform: translate3d(376px, -7px, 16px);"><div class="face ground ripple" style="width: 20px; height: 9px; left: -10px; top: -4.5px; transform: rotateX(90deg); border-radius: 50px; animation-delay: 2.01s;"></div></div><div class="node" style="transform: translate3d(-250px, -7.5px, 215px);"><div class="face ground steam" style="width: 120px; height: 54px; left: -60px; top: -27px; transform: rotateX(90deg); border-radius: 50px; animation-delay: 0s;"></div></div><div class="node" style="transform: translate3d(270px, -7.5px, 210px);"><div class="face ground steam" style="width: 80px; height: 36px; left: -40px; top: -18px; transform: rotateX(90deg); border-radius: 50px; animation-delay: -2.1s;"></div></div><div class="node" style="transform: translate3d(110px, -7.5px, 255px);"><div class="face ground steam" style="width: 95px; height: 42.75px; left: -47.5px; top: -21.375px; transform: rotateX(90deg); border-radius: 50px; animation-delay: -4.2s;"></div></div></div>
+    </div>
+  </div>
+  <div id="atmosphere" aria-hidden="true">
+    <div class="night-glow one"></div>
+    <div class="night-glow two"></div>
+  </div>
+  <div id="rain" aria-hidden="true"><i class="raindrop" style="--x: 0vw; --len: 11px; --speed: 3.05s; --delay: 0s;"></i><i class="raindrop" style="--x: 37.13vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.23s;"></i><i class="raindrop" style="--x: 74.26vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.46s;"></i><i class="raindrop" style="--x: 8.390000000000015vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.69s;"></i><i class="raindrop" style="--x: 45.52000000000001vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.92s;"></i><i class="raindrop" style="--x: 82.65vw; --len: 11px; --speed: 3.05s; --delay: -1.15s;"></i><i class="raindrop" style="--x: 16.78000000000003vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.38s;"></i><i class="raindrop" style="--x: 53.910000000000025vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.61s;"></i><i class="raindrop" style="--x: 91.04000000000002vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.84s;"></i><i class="raindrop" style="--x: 25.170000000000016vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.17s;"></i><i class="raindrop" style="--x: 62.30000000000001vw; --len: 11px; --speed: 3.05s; --delay: -0.4s;"></i><i class="raindrop" style="--x: 99.43vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.63s;"></i><i class="raindrop" style="--x: 33.56000000000006vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.86s;"></i><i class="raindrop" style="--x: 70.69000000000005vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.09s;"></i><i class="raindrop" style="--x: 4.82000000000005vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.32s;"></i><i class="raindrop" style="--x: 41.950000000000045vw; --len: 11px; --speed: 3.05s; --delay: -1.55s;"></i><i class="raindrop" style="--x: 79.08000000000004vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.78s;"></i><i class="raindrop" style="--x: 13.210000000000036vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.11s;"></i><i class="raindrop" style="--x: 50.34000000000003vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.34s;"></i><i class="raindrop" style="--x: 87.47000000000003vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.57s;"></i><i class="raindrop" style="--x: 21.600000000000023vw; --len: 11px; --speed: 3.05s; --delay: -0.8s;"></i><i class="raindrop" style="--x: 58.73000000000002vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.03s;"></i><i class="raindrop" style="--x: 95.86000000000001vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.26s;"></i><i class="raindrop" style="--x: 29.99000000000001vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.49s;"></i><i class="raindrop" style="--x: 67.12000000000012vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.72s;"></i><i class="raindrop" style="--x: 1.2500000000001137vw; --len: 11px; --speed: 3.05s; --delay: -0.05s;"></i><i class="raindrop" style="--x: 38.38000000000011vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.28s;"></i><i class="raindrop" style="--x: 75.5100000000001vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.51s;"></i><i class="raindrop" style="--x: 9.6400000000001vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.74s;"></i><i class="raindrop" style="--x: 46.76999999999998vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.97s;"></i><i class="raindrop" style="--x: 83.90000000000009vw; --len: 11px; --speed: 3.05s; --delay: -1.2s;"></i><i class="raindrop" style="--x: 18.029999999999973vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.43s;"></i><i class="raindrop" style="--x: 55.16000000000008vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.66s;"></i><i class="raindrop" style="--x: 92.29000000000019vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.89s;"></i><i class="raindrop" style="--x: 26.420000000000073vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.22s;"></i><i class="raindrop" style="--x: 63.55000000000018vw; --len: 11px; --speed: 3.05s; --delay: -0.45s;"></i><i class="raindrop" style="--x: 100.68000000000006vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.68s;"></i><i class="raindrop" style="--x: 34.81000000000017vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.91s;"></i><i class="raindrop" style="--x: 71.94000000000005vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.14s;"></i><i class="raindrop" style="--x: 6.070000000000164vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.37s;"></i><i class="raindrop" style="--x: 43.200000000000045vw; --len: 11px; --speed: 3.05s; --delay: -1.6s;"></i><i class="raindrop" style="--x: 80.33000000000015vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.83s;"></i><i class="raindrop" style="--x: 14.460000000000036vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.16s;"></i><i class="raindrop" style="--x: 51.590000000000146vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.39s;"></i><i class="raindrop" style="--x: 88.72000000000003vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.62s;"></i><i class="raindrop" style="--x: 22.850000000000136vw; --len: 11px; --speed: 3.05s; --delay: -0.85s;"></i><i class="raindrop" style="--x: 59.98000000000002vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.08s;"></i><i class="raindrop" style="--x: 97.11000000000013vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.31s;"></i><i class="raindrop" style="--x: 31.240000000000236vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.54s;"></i><i class="raindrop" style="--x: 68.37000000000012vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.77s;"></i><i class="raindrop" style="--x: 2.5000000000002274vw; --len: 11px; --speed: 3.05s; --delay: -0.1s;"></i><i class="raindrop" style="--x: 39.63000000000011vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.33s;"></i><i class="raindrop" style="--x: 76.76000000000022vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.56s;"></i><i class="raindrop" style="--x: 10.8900000000001vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.79s;"></i><i class="raindrop" style="--x: 48.02000000000021vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.02s;"></i><i class="raindrop" style="--x: 85.15000000000009vw; --len: 11px; --speed: 3.05s; --delay: -1.25s;"></i><i class="raindrop" style="--x: 19.2800000000002vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.48s;"></i><i class="raindrop" style="--x: 56.41000000000031vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.71s;"></i><i class="raindrop" style="--x: 93.53999999999996vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.04s;"></i><i class="raindrop" style="--x: 27.670000000000073vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.27s;"></i><i class="raindrop" style="--x: 64.80000000000018vw; --len: 11px; --speed: 3.05s; --delay: -0.5s;"></i><i class="raindrop" style="--x: 101.93000000000029vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.73s;"></i><i class="raindrop" style="--x: 36.059999999999945vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.96s;"></i><i class="raindrop" style="--x: 73.19000000000005vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.19s;"></i><i class="raindrop" style="--x: 7.320000000000164vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.42s;"></i><i class="raindrop" style="--x: 44.45000000000027vw; --len: 11px; --speed: 3.05s; --delay: -1.65s;"></i><i class="raindrop" style="--x: 81.58000000000038vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.88s;"></i><i class="raindrop" style="--x: 15.710000000000036vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.21s;"></i><i class="raindrop" style="--x: 52.840000000000146vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.44s;"></i><i class="raindrop" style="--x: 89.97000000000025vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.67s;"></i><i class="raindrop" style="--x: 24.100000000000364vw; --len: 11px; --speed: 3.05s; --delay: -0.9s;"></i><i class="raindrop" style="--x: 61.23000000000002vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.13s;"></i><i class="raindrop" style="--x: 98.36000000000013vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.36s;"></i><i class="raindrop" style="--x: 32.49000000000024vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.59s;"></i><i class="raindrop" style="--x: 69.62000000000035vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.82s;"></i><i class="raindrop" style="--x: 3.75vw; --len: 11px; --speed: 3.05s; --delay: -0.15s;"></i><i class="raindrop" style="--x: 40.88000000000011vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.38s;"></i><i class="raindrop" style="--x: 78.01000000000022vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.61s;"></i><i class="raindrop" style="--x: 12.140000000000327vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.84s;"></i><i class="raindrop" style="--x: 49.26999999999998vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.07s;"></i><i class="raindrop" style="--x: 86.40000000000009vw; --len: 11px; --speed: 3.05s; --delay: -1.3s;"></i><i class="raindrop" style="--x: 20.5300000000002vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -1.53s;"></i><i class="raindrop" style="--x: 57.66000000000031vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.76s;"></i><i class="raindrop" style="--x: 94.79000000000042vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.09s;"></i><i class="raindrop" style="--x: 28.920000000000073vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.32s;"></i><i class="raindrop" style="--x: 66.05000000000018vw; --len: 11px; --speed: 3.05s; --delay: -0.55s;"></i><i class="raindrop" style="--x: 0.18000000000029104vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.78s;"></i><i class="raindrop" style="--x: 37.3100000000004vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -1.01s;"></i><i class="raindrop" style="--x: 74.44000000000005vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -1.24s;"></i><i class="raindrop" style="--x: 8.570000000000164vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -1.47s;"></i><i class="raindrop" style="--x: 45.70000000000027vw; --len: 11px; --speed: 3.05s; --delay: -1.7s;"></i><i class="raindrop" style="--x: 82.83000000000038vw; --len: 15.600000000000001px; --speed: 2.8s; --delay: -0.03s;"></i><i class="raindrop" style="--x: 16.960000000000036vw; --len: 20.200000000000003px; --speed: 2.55s; --delay: -0.26s;"></i><i class="raindrop" style="--x: 54.090000000000146vw; --len: 24.799999999999997px; --speed: 2.3s; --delay: -0.49s;"></i><i class="raindrop" style="--x: 91.22000000000025vw; --len: 29.400000000000002px; --speed: 2.05s; --delay: -0.72s;"></i><i class="raindrop" style="--x: 25.350000000000364vw; --len: 11px; --speed: 3.05s; --delay: -0.95s;"></i></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const U = 100;
+      const scene = document.getElementById("scene");
+      const rig = document.getElementById("rig");
+      const viewport = document.getElementById("viewport");
+
+      const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+      const shade = (hex, amount) => {
+        const n = parseInt(hex.replace("#", ""), 16);
+        const r = clamp((n >> 16) + amount, 0, 255);
+        const g = clamp(((n >> 8) & 255) + amount, 0, 255);
+        const b = clamp((n & 255) + amount, 0, 255);
+        return `rgb(${r},${g},${b})`;
+      };
+
+      function node(x, y, z) {
+        const el = document.createElement("div");
+        el.className = "node";
+        el.style.transform = `translate3d(${x * U}px, ${-y * U}px, ${z * U}px)`;
+        scene.appendChild(el);
+        return el;
+      }
+
+      function box({
+        x = 0, y = 0, z = 0, w = 1, h = 1, d = 1,
+        color = "#aeb8bd", top = null, side = null, front = null,
+        bottom = null, className = "", radius = 2
+      }) {
+        const g = node(x, y + h / 2, z);
+        const W = w * U, H = h * U, D = d * U;
+        const addFace = (width, height, transform, background, cls = "") => {
+          const f = document.createElement("div");
+          f.className = `face ${className} ${cls}`.trim();
+          f.style.width = `${width}px`;
+          f.style.height = `${height}px`;
+          f.style.left = `${-width / 2}px`;
+          f.style.top = `${-height / 2}px`;
+          f.style.transform = transform;
+          f.style.background = background;
+          f.style.borderRadius = `${radius}px`;
+          g.appendChild(f);
+          return f;
+        };
+        const topC = top || shade(color, 18);
+        const sideC = side || shade(color, -17);
+        const frontC = front || color;
+        const bottomC = bottom || shade(color, -28);
+        addFace(W, D, `translateY(${-H / 2}px) rotateX(90deg)`, topC, "box-top");
+        addFace(W, D, `translateY(${H / 2}px) rotateX(-90deg)`, bottomC, "box-bottom");
+        addFace(W, H, `translateZ(${D / 2}px)`, frontC, "box-front");
+        addFace(W, H, `translateZ(${-D / 2}px) rotateY(180deg)`, shade(color, -13), "box-back");
+        addFace(D, H, `translateX(${W / 2}px) rotateY(90deg)`, sideC, "box-right");
+        addFace(D, H, `translateX(${-W / 2}px) rotateY(-90deg)`, shade(sideC, 4), "box-left");
+        return g;
+      }
+
+      function verticalPanel({
+        x = 0, y = 0, z = 0, w = 1, h = 1,
+        className = "", background = null, rotY = 0, radius = 2
+      }) {
+        const g = node(x, y + h / 2, z);
+        const f = document.createElement("div");
+        f.className = `face ${className}`.trim();
+        f.style.width = `${w * U}px`;
+        f.style.height = `${h * U}px`;
+        f.style.left = `${-w * U / 2}px`;
+        f.style.top = `${-h * U / 2}px`;
+        f.style.transform = `rotateY(${rotY}deg)`;
+        if (background) f.style.background = background;
+        f.style.borderRadius = `${radius}px`;
+        g.appendChild(f);
+        return { group: g, face: f };
+      }
+
+      function groundPanel({
+        x = 0, y = 0.02, z = 0, w = 1, d = 1,
+        className = "", background = null, radius = 0
+      }) {
+        const g = node(x, y, z);
+        const f = document.createElement("div");
+        f.className = `face ground ${className}`.trim();
+        f.style.width = `${w * U}px`;
+        f.style.height = `${d * U}px`;
+        f.style.left = `${-w * U / 2}px`;
+        f.style.top = `${-d * U / 2}px`;
+        f.style.transform = "rotateX(90deg)";
+        if (background) f.style.background = background;
+        f.style.borderRadius = `${radius}px`;
+        g.appendChild(f);
+        return { group: g, face: f };
+      }
+
+      function horizontalFace({
+        x = 0, y = 0, z = 0, w = 1, d = 1,
+        className = "", background = null, radius = 0
+      }) {
+        return groundPanel({ x, y, z, w, d, className, background, radius });
+      }
+
+      function label(face, html, style = {}) {
+        const el = document.createElement("div");
+        el.innerHTML = html;
+        Object.assign(el.style, style);
+        face.appendChild(el);
+        return el;
+      }
+
+      function rod2d(x1, y1, x2, y2, z, thickness, color, className = "", parent = scene) {
+        const dx = (x2 - x1) * U;
+        const dy = -(y2 - y1) * U;
+        const length = Math.hypot(dx, dy);
+        const g = document.createElement("div");
+        g.className = "node";
+        g.style.transform = `translate3d(${(x1 + x2) * U / 2}px, ${-(y1 + y2) * U / 2}px, ${z * U}px)`;
+        const el = document.createElement("div");
+        el.className = `face wire ${className}`.trim();
+        el.style.width = `${length}px`;
+        el.style.height = `${thickness}px`;
+        el.style.left = `${-length / 2}px`;
+        el.style.top = `${-thickness / 2}px`;
+        el.style.transform = `rotateZ(${Math.atan2(dy, dx)}rad)`;
+        el.style.background = color;
+        g.appendChild(el);
+        parent.appendChild(g);
+        return g;
+      }
+
+      function disc3d({ x, y, z, diameter, color, thickness = 0.04, className = "" }) {
+        const g = node(x, y, z);
+        const ring = document.createElement("div");
+        ring.className = `face ${className}`.trim();
+        ring.style.width = `${diameter * U}px`;
+        ring.style.height = `${diameter * U}px`;
+        ring.style.left = `${-diameter * U / 2}px`;
+        ring.style.top = `${-diameter * U / 2}px`;
+        ring.style.borderRadius = "50%";
+        ring.style.border = `${Math.max(2, thickness * U)}px solid ${color}`;
+        ring.style.background = "transparent";
+        ring.style.transform = "translateZ(0.5px)";
+        g.appendChild(ring);
+        return g;
+      }
+
+      // 完整正方形展示底座
+      box({
+        x: 0, y: -0.18, z: 0, w: 8.86, h: 0.25, d: 8.86,
+        color: "#26344b", top: "#34445e", side: "#18243a", radius: 12
+      });
+      horizontalFace({
+        x: 0, y: 0.002, z: 0, w: 8.52, d: 8.52,
+        className: "base-top", radius: 5
+      });
+      box({
+        x: 0, y: -0.275, z: 0, w: 9.03, h: 0.07, d: 9.03,
+        color: "#172033", top: "#1d2940", side: "#0e1628", radius: 8
+      });
+
+      // 街道基底：前街与右侧转弯
+      horizontalFace({
+        x: 0, y: 0.085, z: 3.16, w: 8.45, d: 2.18,
+        className: "asphalt", radius: 5
+      });
+      horizontalFace({
+        x: 3.5, y: 0.087, z: -0.68, w: 1.45, d: 6.0,
+        className: "asphalt", radius: 5
+      });
+      horizontalFace({
+        x: -2.52, y: 0.089, z: -2.58, w: 3.38, d: 1.52,
+        className: "asphalt", radius: 4
+      });
+
+      // 人行道与路缘
+      horizontalFace({
+        x: -0.15, y: 0.125, z: 1.72, w: 7.45, d: 1.0,
+        className: "sidewalk", radius: 4
+      });
+      horizontalFace({
+        x: 2.29, y: 0.127, z: -0.54, w: 1.05, d: 5.45,
+        className: "sidewalk", radius: 4
+      });
+      box({ x: 0, y: 0.125, z: 2.23, w: 7.5, h: 0.12, d: 0.09, color: "#9ca7aa", className: "curb", radius: 4 });
+      box({ x: 2.83, y: 0.125, z: -0.42, w: 0.1, h: 0.12, d: 5.25, color: "#909ba0", className: "curb", radius: 4 });
+      box({ x: 2.47, y: 0.125, z: 0.2, w: 0.62, h: 0.1, d: 0.1, color: "#9ca7aa", className: "curb", radius: 4 });
+
+      // 排水沟、井盖与斑马线
+      horizontalFace({
+        x: -0.75, y: 0.137, z: 2.31, w: 4.1, d: 0.12,
+        className: "gutter", radius: 1
+      });
+      horizontalFace({
+        x: 2.91, y: 0.139, z: -1.15, w: 0.12, d: 2.45,
+        className: "gutter", radius: 1
+      });
+      horizontalFace({
+        x: 2.38, y: 0.14, z: 0.2, w: 0.62, d: 0.1,
+        className: "gutter", radius: 1
+      });
+      const crosswalk = groundPanel({
+        x: -0.62, y: 0.145, z: 3.45, w: 4.9, d: 1.08,
+        className: "crosswalk", radius: 2
+      }).face;
+      for (let i = 0; i < 10; i++) {
+        const stripe = document.createElement("a");
+        stripe.style.left = `${5.4 + i * 9.5}%`;
+        stripe.style.width = `${3.8}%`;
+        stripe.style.transform = `skewX(-3deg)`;
+        crosswalk.appendChild(stripe);
+      }
+
+      // 停车位与道路标记
+      groundPanel({ x: 3.75, y: 0.146, z: -1.68, w: 0.05, d: 1.65, background: "rgba(230,235,222,.55)" });
+      groundPanel({ x: 3.75, y: 0.146, z: -2.6, w: 1.26, d: 0.05, background: "rgba(230,235,222,.55)" });
+      groundPanel({ x: 4.34, y: 0.146, z: -0.72, w: 0.05, d: 1.2, background: "rgba(230,235,222,.55)" });
+      groundPanel({ x: 3.61, y: 0.146, z: 0.76, w: 1.1, d: 0.07, background: "rgba(230,235,222,.46)" });
+      groundPanel({ x: -2.75, y: 0.146, z: 2.73, w: 1.35, d: 0.07, background: "rgba(230,235,222,.4)" });
+
+      // 湿地面水洼与灯光倒影
+      groundPanel({ x: 0.05, y: 0.161, z: 1.55, w: 3.48, d: 0.37, className: "road-reflection", background: "linear-gradient(90deg, transparent, rgba(98,235,244,.5), rgba(246,244,193,.39), transparent)" });
+      groundPanel({ x: 2.12, y: 0.162, z: 1.82, w: 0.94, d: 0.23, className: "road-reflection", background: "linear-gradient(90deg, transparent, rgba(255,143,104,.5), transparent)" });
+      groundPanel({ x: -2.05, y: 0.163, z: 2.75, w: 0.56, d: 0.18, className: "road-reflection", background: "linear-gradient(90deg, transparent, rgba(255,220,139,.55), transparent)" });
+      groundPanel({ x: 2.68, y: 0.165, z: 3.25, w: 0.48, d: 0.18, className: "road-reflection", background: "linear-gradient(90deg, transparent, rgba(112,225,255,.48), transparent)" });
+      groundPanel({ x: -0.55, y: 0.166, z: 2.67, w: 1.72, d: 0.48, className: "road-reflection", background: "linear-gradient(180deg,transparent 5%,rgba(72,231,244,.38),rgba(244,219,142,.25),transparent 95%)" });
+      groundPanel({ x: 2.14, y: 0.167, z: 2.72, w: 0.64, d: 0.76, className: "road-reflection", background: "linear-gradient(180deg,transparent,rgba(255,118,100,.44),transparent)" });
+      groundPanel({ x: 3.54, y: 0.168, z: 0.75, w: 0.36, d: 1.15, className: "road-reflection", background: "linear-gradient(90deg,transparent,rgba(210,173,99,.34),transparent)" });
+
+      groundPanel({ x: 0.89, y: 0.158, z: 1.93, w: 1.36, d: 0.43, className: "puddle", radius: 50 });
+      groundPanel({ x: 2.42, y: 0.159, z: 2.55, w: 0.98, d: 0.5, className: "puddle", radius: 50 });
+      groundPanel({ x: -1.64, y: 0.159, z: 2.9, w: 1.82, d: 0.64, className: "puddle", radius: 50 });
+      groundPanel({ x: 3.76, y: 0.159, z: 0.16, w: 0.8, d: 1.42, className: "puddle", radius: 50 });
+
+      // 便利店主体
+      const storeX = -0.35;
+      const storeZ = -0.58;
+      box({
+        x: storeX, y: 0.1, z: storeZ, w: 4.0, h: 2.7, d: 2.9,
+        color: "#d7d4c7", top: "#4c5963", side: "#9f9fa0", front: "#e7e2d4", radius: 2
+      });
+      box({
+        x: storeX, y: 2.78, z: storeZ, w: 4.2, h: 0.16, d: 3.1,
+        color: "#58636d", top: "#405461", side: "#35454f", radius: 2
+      });
+      box({
+        x: storeX, y: 2.94, z: -1.7, w: 4.02, h: 0.25, d: 0.16,
+        color: "#7d8589", top: "#a4aaab", side: "#545e66", radius: 1
+      });
+
+      // 屋顶设备与通风管，让俯视角度也有细节层次
+      box({
+        x: -1.63, y: 2.92, z: -1.32, w: 0.72, h: 0.34, d: 0.53,
+        color: "#6b7c80", top: "#8f9c9d", side: "#4a5b62", front: "#75858a", radius: 3
+      });
+      verticalPanel({
+        x: -1.63, y: 3.0, z: -1.04, w: 0.57, h: 0.2,
+        className: "roof-unit", radius: 2
+      });
+      box({
+        x: -0.55, y: 2.92, z: -1.43, w: 0.28, h: 0.27, d: 0.28,
+        color: "#61747a", top: "#849395", side: "#40535b", radius: 10
+      });
+      verticalPanel({
+        x: -0.55, y: 2.99, z: -1.28, w: 0.2, h: 0.12,
+        background: "repeating-linear-gradient(90deg,#31454d 0 2px,#7e8d8e 2px 4px)",
+        radius: 4
+      });
+      box({
+        x: 0.72, y: 2.92, z: -1.56, w: 0.1, h: 0.52, d: 0.1,
+        color: "#8a9798", top: "#a0abaa", side: "#637579", radius: 6
+      });
+      box({
+        x: 1.08, y: 2.92, z: -1.56, w: 0.1, h: 0.38, d: 0.1,
+        color: "#718184", top: "#92a09f", side: "#50636a", radius: 6
+      });
+
+      // 店面玻璃与内部货架层次
+      const leftWindow = verticalPanel({
+        x: -1.73, y: 0.36, z: 0.89, w: 1.72, h: 1.63,
+        className: "glass", radius: 2
+      }).face;
+      leftWindow.innerHTML = `
+        <div class="window-interior">
+          <div class="shelf" style="--c1:#e26f63;--c2:#eab85c;--c3:#5ab4b5"><i style="left:4%;background:#e26f63"></i></div>
+          <div class="shelf" style="--c1:#779bd4;--c2:#ef9c82;--c3:#76bc7e"><i style="left:13%;background:#779bd4"></i></div>
+          <div class="shelf" style="--c1:#e9c15d;--c2:#74aec0;--c3:#d47b7e"><i style="left:6%;background:#e9c15d"></i></div>
+          <div class="shelf" style="--c1:#74b784;--c2:#d77e88;--c3:#d6b95a"><i style="left:18%;background:#74b784"></i></div>
+        </div>`;
+
+      const rightWindow = verticalPanel({
+        x: -0.18, y: 0.36, z: 0.89, w: 1.03, h: 1.63,
+        className: "glass", radius: 2
+      }).face;
+      rightWindow.innerHTML = `
+        <div class="window-interior">
+          <div class="shelf" style="--c1:#d67a70;--c2:#efb863;--c3:#6bbdb7"><i style="left:10%;background:#d67a70"></i></div>
+          <div class="shelf" style="--c1:#6a9fc8;--c2:#e79479;--c3:#77b981"><i style="left:5%;background:#6a9fc8"></i></div>
+          <div class="shelf" style="--c1:#e8c15a;--c2:#75afbe;--c3:#d8807c"><i style="left:13%;background:#e8c15a"></i></div>
+          <div class="shelf" style="--c1:#71b68a;--c2:#d27e88;--c3:#d8bb5b"><i style="left:2%;background:#71b68a"></i></div>
+        </div>`;
+
+      const door = verticalPanel({
+        x: 0.99, y: 0.25, z: 0.91, w: 0.92, h: 1.84,
+        className: "glass door-light", radius: 2
+      }).face;
+      label(door, "", {
+        position: "absolute", left: "48%", top: 0, bottom: 0, width: "4px",
+        background: "linear-gradient(#25333c,#a8b1b1,#26333c)", zIndex: 5
+      });
+      verticalPanel({ x: 0.57, y: 0.86, z: 0.95, w: 0.035, h: 0.38, className: "handle", radius: 4 });
+      verticalPanel({ x: 1.14, y: 0.86, z: 0.955, w: 0.035, h: 0.38, className: "handle", radius: 4 });
+
+      // 门窗框、地垫与热饮标识
+      box({ x: -2.59, y: 0.25, z: 0.96, w: 0.08, h: 2.0, d: 0.07, color: "#26353e", className: "mullion", radius: 1 });
+      box({ x: -0.7, y: 0.25, z: 0.96, w: 0.075, h: 1.99, d: 0.07, color: "#26353e", className: "mullion", radius: 1 });
+      box({ x: 0.45, y: 0.25, z: 0.97, w: 0.085, h: 2.02, d: 0.07, color: "#26353e", className: "mullion", radius: 1 });
+      box({ x: 1.47, y: 0.25, z: 0.97, w: 0.09, h: 2.02, d: 0.07, color: "#26353e", className: "mullion", radius: 1 });
+      horizontalFace({ x: 0.39, y: 0.081, z: 1.18, w: 1.19, d: 0.44, className: "doormat", radius: 1 });
+      const welcome = verticalPanel({
+        x: 0.44, y: 1.72, z: 0.985, w: 0.18, h: 0.13, className: "traffic-panel", radius: 2
+      }).face;
+      label(welcome, "OPEN", {
+        position: "absolute", inset: 0, display: "grid", placeItems: "center",
+        color: "#f3ffef", font: "900 7px Arial", letterSpacing: ".05em"
+      });
+
+      // 招牌与雨棚
+      const sign = verticalPanel({
+        x: -0.62, y: 2.18, z: 0.985, w: 3.78, h: 0.54,
+        className: "store-sign", radius: 2
+      }).face;
+      sign.innerHTML = `
+        <div class="sign-pin"></div>
+        <div class="sign-copy"><span class="jp">まちかどマート</span><span class="en">24H</span></div>`;
+
+      box({
+        x: storeX, y: 2.02, z: 1.12, w: 3.94, h: 0.11, d: 0.72,
+        color: "#1a7885", top: "#41a9b0", side: "#155560", className: "awning", radius: 2
+      });
+      verticalPanel({
+        x: storeX, y: 1.89, z: 1.49, w: 3.94, h: 0.22,
+        className: "awning-valence", radius: 1
+      });
+      verticalPanel({
+        x: storeX, y: 1.885, z: 1.503, w: 3.88, h: 0.025,
+        background: "linear-gradient(90deg,#7bf6ff,#e7fff0,#7bf6ff)",
+        radius: 3
+      }).face.style.boxShadow = "0 0 10px rgba(115,244,255,.9)";
+
+      const coffeeSign = verticalPanel({
+        x: -2.43, y: 1.24, z: 1.5, w: 0.3, h: 0.72,
+        className: "coffee-sign", radius: 3
+      }).face;
+      coffeeSign.innerHTML = `<span>珈琲</span>`;
+      box({ x: -2.43, y: 1.95, z: 1.47, w: 0.035, h: 0.18, d: 0.035, color: "#28383e", radius: 3 });
+
+      const sideNeon = verticalPanel({
+        x: 1.68, y: 1.81, z: 0.02, w: 0.88, h: 0.23,
+        className: "side-neon", rotY: 90, radius: 2
+      }).face;
+      sideNeon.innerHTML = `<span>OPEN 24H</span>`;
+
+      // 店铺侧墙海报与空调外机
+      const poster1 = verticalPanel({
+        x: 1.675, y: 0.7, z: -0.76, w: 1.02, h: 1.22,
+        className: "poster", rotY: 90, radius: 2
+      }).face;
+      poster1.innerHTML = `<div class="poster-title">夏の夜市</div><div class="poster-mark"></div><div class="poster-lines"></div>`;
+      const poster2 = verticalPanel({
+        x: 1.678, y: 1.02, z: -1.72, w: 0.48, h: 0.62,
+        className: "poster", rotY: 90, radius: 2
+      }).face;
+      poster2.innerHTML = `<div class="poster-title" style="font-size:7px">NEW<br>DRINK</div><div class="poster-mark" style="background:#5ab6bc"></div>`;
+
+      box({
+        x: 1.9, y: 1.58, z: -2.05, w: 0.5, h: 0.48, d: 0.6,
+        color: "#b7bdb9", top: "#d4d6ce", side: "#858f8e", radius: 3
+      });
+      box({
+        x: 2.16, y: 1.64, z: -2.05, w: 0.02, h: 0.35, d: 0.48,
+        color: "#4a555b", top: "#5c6669", side: "#323d44", radius: 8
+      });
+      for (let i = 0; i < 6; i++) {
+        verticalPanel({
+          x: 2.173, y: 1.52 + i * 0.045, z: -2.05, w: 0.4, h: 0.015,
+          background: "#313e45", rotY: 90, radius: 1
+        });
+      }
+
+      // 自动贩卖机
+      box({
+        x: 2.47, y: 0.06, z: 0.64, w: 0.82, h: 1.68, d: 0.58,
+        color: "#b44243", top: "#d26c63", side: "#7d3038", front: "#b84949",
+        className: "vending-body", radius: 3
+      });
+      const vendingFace = verticalPanel({
+        x: 2.47, y: 0.16, z: 0.936, w: 0.7, h: 1.46,
+        className: "vending-panel", radius: 2
+      }).face;
+      const drinks = [["#ef745f", "#e9b55b", "#6db2c0", "#dd7d87"], ["#74b594", "#e6c25d", "#e77d63", "#729bc9"], ["#d6a75b", "#ed857d", "#63b1b4", "#86bd78"]];
+      const grid = document.createElement("div");
+      grid.className = "drink-grid";
+      drinks.flat().forEach((c) => {
+        const can = document.createElement("i");
+        can.style.setProperty("--drink", c);
+        grid.appendChild(can);
+      });
+      vendingFace.appendChild(grid);
+      label(vendingFace, "COLD DRINKS", {});
+      vendingFace.lastElementChild.className = "vending-copy";
+      groundPanel({
+        x: 2.47, y: 0.059, z: 1.15, w: 0.94, d: 0.24,
+        className: "road-reflection",
+        background: "linear-gradient(90deg,transparent,rgba(255,142,112,.6),transparent)"
+      });
+
+      // 海报栏与后巷入口
+      groundPanel({ x: 2.2, y: 0.03, z: -2.55, w: 0.65, d: 1.24, background: "linear-gradient(145deg,#162334,#080e18)", radius: 2 });
+      verticalPanel({
+        x: 2.54, y: 0.48, z: -2.26, w: 0.12, h: 0.95,
+        background: "#536166", rotY: 90, radius: 2
+      });
+      const notice = verticalPanel({
+        x: 2.6, y: 0.8, z: -2.24, w: 0.76, h: 0.96,
+        className: "notice-board", rotY: 90, radius: 2
+      }).face;
+      notice.innerHTML = `
+        <div class="poster" style="position:absolute;left:8%;top:10%;width:38%;height:67%;border-width:2px"></div>
+        <div class="poster" style="position:absolute;right:8%;top:13%;width:36%;height:57%;border-width:2px;transform:rotate(3deg)"></div>
+        <div style="position:absolute;left:12%;right:12%;bottom:8%;height:1px;background:#7d8887"></div>`;
+      box({ x: 2.2, y: 0.045, z: -2.55, w: 0.62, h: 0.05, d: 1.18, color: "#23333b", radius: 1 });
+
+      // 店侧窄巷入口：暖色吊灯与低矮门架
+      groundPanel({
+        x: 1.99, y: 0.175, z: -1.82, w: 0.48, d: 1.58,
+        background:
+          "linear-gradient(90deg,rgba(4,8,16,.88),rgba(20,31,42,.72)),repeating-linear-gradient(90deg,transparent 0 10px,rgba(170,205,205,.08) 11px 12px)",
+        radius: 2
+      });
+      box({ x: 1.76, y: 0.18, z: -1.12, w: 0.07, h: 1.22, d: 0.07, color: "#596b6c", top: "#708080", side: "#3a4e52", radius: 3 });
+      box({ x: 2.22, y: 0.18, z: -1.12, w: 0.07, h: 1.22, d: 0.07, color: "#596b6c", top: "#708080", side: "#3a4e52", radius: 3 });
+      box({ x: 1.99, y: 1.4, z: -1.12, w: 0.53, h: 0.07, d: 0.08, color: "#607274", top: "#7c8987", side: "#3f5458", radius: 2 });
+      const alleySign = verticalPanel({
+        x: 1.99, y: 1.48, z: -1.075, w: 0.32, h: 0.44,
+        className: "alley-sign", radius: 2
+      }).face;
+      alleySign.innerHTML = `<span>路地</span>`;
+      box({ x: 2.03, y: 1.27, z: -1.04, w: 0.035, h: 0.2, d: 0.035, color: "#25343b", radius: 3 });
+      verticalPanel({ x: 2.03, y: 1.18, z: -1.02, w: 0.16, h: 0.12, className: "lamp-light", radius: 7 });
+      groundPanel({
+        x: 2.03, y: 0.181, z: -1.18, w: 0.44, d: 0.38,
+        className: "road-reflection",
+        background: "radial-gradient(ellipse,rgba(255,201,112,.62),transparent 70%)"
+      });
+
+      // 自动门旁垃圾桶与雨伞架
+      box({ x: 1.73, y: 0.06, z: 1.47, w: 0.32, h: 0.62, d: 0.32, color: "#42585a", top: "#667978", side: "#304447", radius: 5 });
+      box({ x: 1.73, y: 0.665, z: 1.47, w: 0.36, h: 0.08, d: 0.36, color: "#66767a", className: "trash-lid", radius: 6 });
+      verticalPanel({ x: 1.73, y: 0.16, z: 1.639, w: 0.14, h: 0.12, background: "#d7e0d0", radius: 1 });
+
+      const rack = box({ x: -0.02, y: 0.06, z: 1.36, w: 0.34, h: 0.52, d: 0.28, color: "#5f6d71", top: "#798486", side: "#415258", radius: 4 });
+      const umbrellas = [
+        { x: -0.12, z: 1.36, c: "#61aeb4", rot: -10 },
+        { x: 0, z: 1.33, c: "#d8908c", rot: 4 },
+        { x: 0.11, z: 1.39, c: "#d5ba71", rot: 12 }
+      ];
+      umbrellas.forEach((u) => {
+        const p = verticalPanel({
+          x: u.x, y: 0.27, z: u.z + 0.01, w: 0.11, h: 0.62,
+          className: "umbrella", radius: 10
+        });
+        p.face.style.setProperty("--u-color", u.c);
+        p.face.style.transform = `rotateZ(${u.rot}deg)`;
+      });
+
+      // 自行车
+      const bike = node(-2.42, 0, 1.62);
+      const wheelOffsets = [-0.42, 0.43];
+      wheelOffsets.forEach((dx) => {
+        const wg = document.createElement("div");
+        wg.className = "node";
+        wg.style.transform = `translate3d(${dx * U}px, ${-0.4 * U}px, 0px)`;
+        const wheel = document.createElement("div");
+        wheel.className = "face bike-wheel";
+        wheel.style.width = "74px";
+        wheel.style.height = "74px";
+        wheel.style.left = "-37px";
+        wheel.style.top = "-37px";
+        wg.appendChild(wheel);
+        bike.appendChild(wg);
+      });
+      rod2d(-0.42, 0.4, -0.03, 0.72, 0, 4, "#42989d", "bike-frame", bike);
+      rod2d(-0.03, 0.72, 0.25, 0.38, 0, 4, "#42989d", "bike-frame", bike);
+      rod2d(0.25, 0.38, -0.08, 0.38, 0, 4, "#5bafb1", "bike-frame", bike);
+      rod2d(-0.08, 0.38, -0.42, 0.4, 0, 4, "#5bafb1", "bike-frame", bike);
+      rod2d(-0.03, 0.72, -0.1, 0.92, 0, 3.5, "#9fb1af", "bike-frame", bike);
+      rod2d(0.25, 0.38, 0.43, 0.4, 0, 3, "#9fb1af", "bike-frame", bike);
+      rod2d(-0.08, 0.38, -0.03, 0.72, 0, 2.3, "#91a1a4", "bike-frame", bike);
+      const basket = box({ x: 0, y: 0, z: 0, w: 0.32, h: 0.18, d: 0.18, color: "#819397", top: "#a4b1ae", side: "#53676d", radius: 4 });
+      basket.style.transform = "translate3d(32px, -86px, 0px)";
+      bike.appendChild(basket);
+      rod2d(0.22, 0.18, 0.4, 0.05, 0, 2, "#89969a", "", bike);
+
+      // 电线杆、路灯与电线
+      const utility = box({
+        x: -3.34, y: 0.05, z: 1.66, w: 0.2, h: 4.2, d: 0.2,
+        color: "#68777a", top: "#7c8988", side: "#4f5e64", className: "pole-concrete", radius: 3
+      });
+      box({ x: -3.34, y: 4.19, z: 1.66, w: 1.14, h: 0.09, d: 0.12, color: "#4d5c62", top: "#68747a", side: "#34464d", radius: 2 });
+      box({ x: -3.34, y: 3.94, z: 1.66, w: 0.78, h: 0.08, d: 0.1, color: "#4d5c62", top: "#68747a", side: "#34464d", radius: 2 });
+      [-3.76, -3.34, -2.92].forEach((x) => {
+        box({ x, y: 4.2, z: 1.66, w: 0.07, h: 0.18, d: 0.07, color: "#bdc7bd", top: "#d6dbcf", side: "#79878a", radius: 5 });
+      });
+      box({ x: -3.34, y: 3.69, z: 1.45, w: 0.38, h: 0.48, d: 0.25, color: "#8e9999", top: "#abb3af", side: "#647478", radius: 4 });
+      verticalPanel({ x: -3.34, y: 3.43, z: 1.67, w: 0.09, h: 0.49, className: "pole-green", radius: 2 });
+      const lamp = verticalPanel({ x: -3.34, y: 3.18, z: 1.98, w: 0.34, h: 0.22, className: "lamp-light", radius: 6 }).face;
+      label(lamp, "", { position: "absolute", inset: 0 });
+      groundPanel({ x: -3.34, y: 0.058, z: 1.98, w: 1.12, d: 1.12, className: "lamp-halo", radius: 50 });
+
+      // 三束下垂电线：用短杆形成轻微弧度
+      const wireRuns = [
+        [-3.26, -3.22, 1.66], [-3.34, -3.34, 1.66], [-3.76, -3.76, 1.66]
+      ];
+      wireRuns.forEach(([startX, endX, z], wireIndex) => {
+        const ladder = [
+          [-3.34, 4.53, endX + 0.1, 4.43],
+          [endX + 0.1, 4.43, endX + 1.45, 4.32],
+          [endX + 1.45, 4.32, endX + 2.76, 4.37],
+          [endX + 2.76, 4.37, 3.75, 4.28]
+        ];
+        ladder.forEach(([x1, y1, x2, y2], i) => {
+          rod2d(x1, y1 - wireIndex * 0.08, x2, y2 - wireIndex * 0.08, z + wireIndex * 0.02, 1.45, "#07101a");
+        });
+      });
+      rod2d(-3.34, 4.42, -2.9, 4.0, 1.75, 1.25, "#07101a");
+      rod2d(-2.9, 4.0, -1.95, 3.62, 1.75, 1.25, "#07101a");
+      rod2d(-1.95, 3.62, -1.5, 3.1, 1.75, 1.25, "#07101a");
+
+      // 独立街角路灯
+      box({ x: 3.18, y: 0.05, z: 2.63, w: 0.11, h: 3.05, d: 0.11, color: "#506566", top: "#70807e", side: "#354e50", className: "pole-green", radius: 4 });
+      rod2d(3.18, 3.08, 2.86, 3.23, 2.63, 7, "#3d6061", "bike-frame");
+      verticalPanel({ x: 2.78, y: 3.0, z: 2.63, w: 0.35, h: 0.19, className: "lamp-light", radius: 8 });
+      groundPanel({ x: 2.76, y: 0.058, z: 2.62, w: 1.1, d: 0.85, className: "lamp-halo", radius: 50 });
+
+      // 路牌、禁行标志与街角护栏
+      box({ x: -2.92, y: 0.05, z: 2.64, w: 0.09, h: 2.55, d: 0.09, color: "#697a7d", top: "#82908d", side: "#4f6165", radius: 3 });
+      const traffic = verticalPanel({ x: -2.92, y: 2.16, z: 2.64, w: 0.55, h: 0.39, className: "traffic-panel", radius: 2 }).face;
+      traffic.innerHTML = `<div class="arrow"></div>`;
+      const noEntry = verticalPanel({ x: -2.92, y: 1.62, z: 2.645, w: 0.37, h: 0.37, className: "no-entry", radius: 50 }).face;
+      label(noEntry, "", {});
+
+      const railZ = 2.57;
+      [-0.32, 0.65, 1.62].forEach((x) => {
+        box({ x, y: 0.06, z: railZ, w: 0.08, h: 0.7, d: 0.08, color: "#a8b2b1", top: "#c2cac5", side: "#77878c", radius: 4 });
+      });
+      box({ x: 0.65, y: 0.58, z: railZ, w: 2.04, h: 0.07, d: 0.08, color: "#aab5b3", className: "rail", radius: 4 });
+      box({ x: 0.65, y: 0.36, z: railZ, w: 2.04, h: 0.055, d: 0.07, color: "#b5bfbd", className: "rail", radius: 4 });
+
+      // 小店背侧低墙与街角绿化
+      box({ x: -2.55, y: 0.06, z: -2.47, w: 1.1, h: 0.57, d: 0.24, color: "#8f9791", top: "#abb0a7", side: "#66736f", radius: 3 });
+      box({ x: 2.76, y: 0.08, z: -2.23, w: 0.58, h: 0.39, d: 0.58, color: "#445355", top: "#596665", side: "#2e3d41", radius: 8 });
+      box({ x: 2.76, y: 0.47, z: -2.23, w: 0.17, h: 0.9, d: 0.17, color: "#67594b", top: "#806d5a", side: "#4f443d", radius: 4 });
+      const crown = verticalPanel({ x: 2.76, y: 1.28, z: -2.23, w: 1.32, h: 1.12, className: "tree-crown", radius: "48%" }).face;
+      crown.style.transform = "rotateY(0deg) rotateZ(-4deg)";
+      const crownCross = verticalPanel({ x: 2.76, y: 1.26, z: -2.23, w: 1.08, h: 1.02, className: "tree-crown deep", rotY: 90, radius: "48%" }).face;
+      crownCross.style.transform = "rotateY(90deg) rotateZ(5deg)";
+      verticalPanel({ x: 2.76, y: 1.69, z: -2.23, w: 0.61, h: 0.58, className: "tree-crown deep", radius: "50%" });
+
+      // 细碎雨滴波纹与薄雾
+      [
+        [0.9, 1.93, 0.23], [2.4, 2.55, 0.2], [-1.64, 2.9, 0.28], [3.76, 0.16, 0.2]
+      ].forEach(([x, z, size], i) => {
+        const r = groundPanel({
+          x, y: 0.07, z, w: size, d: size * 0.45,
+          className: "ripple", radius: 50
+        });
+        r.face.style.custom = i;
+        r.face.style.animationDelay = `${i * .67}s`;
+      });
+      [
+        [-2.5, 2.15, 1.2], [2.7, 2.1, .8], [1.1, 2.55, .95]
+      ].forEach(([x, z, w], i) => {
+        const fog = groundPanel({ x, y: 0.075, z, w, d: w * .45, className: "steam", radius: 50 });
+        fog.face.style.animationDelay = `${i * -2.1}s`;
+      });
+
+      // 雨幕
+      const rain = document.getElementById("rain");
+      for (let i = 0; i < 96; i++) {
+        const drop = document.createElement("i");
+        drop.className = "raindrop";
+        const depth = (i % 5) / 5;
+        drop.style.setProperty("--x", `${(i * 37.13) % 103}vw`);
+        drop.style.setProperty("--len", `${11 + depth * 23}px`);
+        drop.style.setProperty("--speed", `${1.8 + (1 - depth) * 1.25}s`);
+        drop.style.setProperty("--delay", `${-((i * 23) % 190) / 100}s`);
+        rain.appendChild(drop);
+      }
+
+      // 交互式环绕视角：无任何界面控件
+      let yaw = -29;
+      let pitch = 47;
+      let zoom = 0.91;
+      let dragging = false;
+      let moved = false;
+      let lastX = 0;
+      let lastY = 0;
+      let pinchDistance = 0;
+      let idle = 0;
+
+      const applyCamera = () => {
+        const responsive = Math.min(1, window.innerWidth / 980, window.innerHeight / 900);
+        const finalScale = clamp(responsive, 0.58, 1.24) * zoom;
+        rig.style.transform = `rotateX(${-pitch}deg) rotateY(${yaw}deg) scale(${finalScale})`;
+      };
+
+      viewport.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "touch" && e.isPrimary === false) return;
+        dragging = true;
+        moved = false;
+        idle = 0;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        viewport.classList.add("dragging");
+        viewport.setPointerCapture?.(e.pointerId);
+      });
+
+      viewport.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        if (Math.abs(dx) + Math.abs(dy) > 1) moved = true;
+        yaw += dx * 0.48;
+        pitch = clamp(pitch + dy * 0.24, 26, 78);
+        lastX = e.clientX;
+        lastY = e.clientY;
+        idle = 0;
+        applyCamera();
+      });
+
+      const endDrag = () => {
+        dragging = false;
+        viewport.classList.remove("dragging");
+      };
+      viewport.addEventListener("pointerup", endDrag);
+      viewport.addEventListener("pointercancel", endDrag);
+      viewport.addEventListener("lostpointercapture", endDrag);
+
+      viewport.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        zoom = clamp(zoom * Math.exp(-e.deltaY * 0.0011), 0.68, 1.68);
+        idle = 0;
+        applyCamera();
+      }, { passive: false });
+
+      viewport.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 2) {
+          pinchDistance = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+
+      viewport.addEventListener("touchmove", (e) => {
+        if (e.touches.length !== 2) return;
+        e.preventDefault();
+        const distance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (pinchDistance > 0) {
+          zoom = clamp(zoom * (distance / pinchDistance), 0.68, 1.68);
+          pinchDistance = distance;
+          idle = 0;
+          applyCamera();
+        }
+      }, { passive: false });
+
+      window.addEventListener("resize", applyCamera);
+      applyCamera();
+
+      // 极轻的静置呼吸旋转，让未操作时也像可收藏模型陈列。
+      let lastFrame = performance.now();
+      const animate = (now) => {
+        const dt = Math.min(50, now - lastFrame);
+        lastFrame = now;
+        if (!dragging) idle += dt;
+        if (idle > 4500 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          yaw += dt * 0.0048;
+          applyCamera();
+        }
+        requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+    })();
+  </script>
+
+
+</body></html>
